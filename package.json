@@ -1,0 +1,33 @@
+{
+  "name": "js-forum",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/evann-g/js-forum#readme",
+  "bugs": {
+    "url": "https://github.com/evann-g/js-forum/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evann-g/js-forum.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node src/server.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.3",
+    "socket.io": "^4.8.3"
+  }
+}

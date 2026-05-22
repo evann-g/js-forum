@@ -1,0 +1,60 @@
+Table follows {
+  following_user_id integer
+  followed_user_id integer
+  created_at timestamp
+}
+
+Table users {
+  id integer [primary key]
+  username varchar
+  email varchar
+  password varchar
+  role varchar
+  created_at timestamp
+}
+
+Table topics {
+  id integer [primary key]
+  title varchar
+  description text
+  created_at timestamp
+}
+
+Table posts {
+  id integer [primary key]
+  topic_id integer [not null]
+  title varchar
+  body text [note: 'Content of the post']
+  user_id integer [not null]
+  status varchar
+  likes integer
+  dislikes integer
+  created_at timestamp
+}
+
+Ref user_posts: posts.user_id > users.id // many-to-one
+
+Ref: users.id < follows.following_user_id
+
+Ref: users.id < follows.followed_user_id
+
+Records users(id, username, role) {
+  0, 'Alice', 'admin'
+  1, 'Bob', 'moderator'
+  2, 'Candice', 'moderator'
+  3, 'David', 'member'
+}
+
+Records follows(following_user_id, followed_user_id, created_at) {
+  1, 0, '2026-01-01'
+  3, 2, '2026-02-28'
+}
+
+Records posts(id, title, user_id) {
+  0, 'Welcome to the forum!', 0
+  1, 'Guidelines', 1
+  2, 'Hello all!', 3
+}
+
+
+Ref: "posts"."topic_id" < "topics"."id"
