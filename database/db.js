@@ -1,51 +1,36 @@
-<<<<<<< HEAD
-import mysql from 'mysql';
+import Database from "better-sqlite3";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+const db = new Database(path.join(__dirname, "../forum.db"));
 
-let con = mysql.createConnection({
-  host: "localhost",
-  user: "yourusername",
-  password: "yourpassword",
-  database: "schema.sql"
-});
-
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Connected!");
-  let sql = "create table users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), password VARCHAR(255))";
-  con.query(sql, function (err, result) {
-    if (err) throw err;
-    console.log("Table created");
-  });
-});
-
-function createUser(username, passwordHash) {
-  let sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-  con.query(sql, [username, passwordHash], function (err, result) {
-    if (err) throw err;
-    console.log("User created");
-  });
+export function testConnection() {
+  db.prepare("SELECT 1").get();
+  console.log("Database connection OK");
 }
 
-export default { createUser };
-=======
-'use strict';
+export function initDB() {
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT
+    )
+  `).run();
+  console.log("Table 'users' ready");
+}
 
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+export function createUser(username, passwordHash) {
+  const stmt = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+  stmt.run(username, passwordHash);
+  console.log("User created");
+}
 
-const DB_PATH = path.join(__dirname, 'uno.db');
+export function getAllUsers() {
+  return db.prepare("SELECT * FROM users").all();
+}
 
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error("Impossible d'ouvrir la base de données:", err.message);
-  } else {
-    console.log('Base de données connectée:', DB_PATH);
-  }
-});
-
-
-
-module.exports = db;
->>>>>>> cf56839853e7e965a7937babcaa38120aa677ce3
+export default db;

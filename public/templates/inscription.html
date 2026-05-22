@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/inscription.css">
+    <title>inscription</title>
+</head>
+<body>
+    <h1>Mon forum</h1>
+    <form action="/inscription" method="POST">
+        <h1>Inscription</h1>
+        <label for="username">Username:</label>
+        <input type="username" id="username" name="username" required="">
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required="">
+        <br>
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" name="password" required="">
+        <br>
+        <button type="submit">Se connecter</button>
+        <br>
+        <br>
+        <a href="/login">Vous avez déjà un compte ? connecter-vous</a>
+    </form>
+</body>
+</html>
