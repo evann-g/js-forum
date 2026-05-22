@@ -1,50 +1,42 @@
-import express from "express";  // ← était require(), incompatible avec les autres import
-import path from "path";
-import"dotenv/config";
-import { fileURLToPath } from "url";
+import "dotenv/config";
+import express from "express";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import bcrypt from "bcrypt";
-
-// Db.js désactivé temporairement
-const createUser = null;
-const findUser = null;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { config } from "./config.js";
+import { applyBodyParsing } from "./middleware/bodyParser.js";
+import { applyLogger } from "./middleware/logger.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import router from "./routes/index.js";
 
 const app = express();
-
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
 const httpServer = createServer(app);
+
 const io = new SocketIOServer(httpServer, {
-  cors: { origin: process.env.CORS_ORIGIN || "http://localhost:8000" },
+  cors: { origin: config.corsOrigin },
 });
 
-app.use(express.static(path.join(__dirname, "../..")));
+applyBodyParsing(app);
+applyLogger(app);
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/base.html"));
-});
+app.use("/api", router);
+
+app.use(errorHandler);
 
 io.on("connection", (socket) => {
-  console.log("Nouvelle connexion :", socket.id);
+  console.log("New client connected:", socket.id);
   socket.on("error", (err) => {
-    console.error("Erreur socket:", err.message);
+    console.log("Erreur socket:", err.message);
   });
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("Unhandled promise rejection:", reason);
-});
+  console.error("Unhandled promise Rejection:", reason);
+})
 
 process.on("uncaughtException", (err) => {
-  console.error("Uncaught exception:", err.message);
+  console.error("Uncaught Exception:", err.message);
 });
 
-const port = Number(process.env.PORT) || 8000;
-httpServer.listen(port, "0.0.0.0", () => {
-  console.log(`server is running on http://0.0.0.0:${port}`);
+httpServer.listen(config.port, "0.0.0.0", () => {
+  console.log('Server running on http://0.0.0.0:${config.port}');
 });
