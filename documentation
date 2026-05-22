@@ -68,17 +68,20 @@ js-forum/
 ## Installation
 
 1. Cloner le dépôt :
+
 ```bash
 git clone https://github.com/evann-g/js-forum.git
 cd js-forum
 ```
 
 2. Installer les dépendances :
+
 ```bash
 npm install
 ```
 
 3. Créer le fichier `.env` à partir du modèle :
+
 ```bash
 cp .env.exemple .env
 ```
@@ -86,6 +89,7 @@ cp .env.exemple .env
 4. Remplir les variables d'environnement dans `.env` (voir section suivante).
 
 5. Créer la base de données et charger le schéma :
+
 ```sql
 CREATE DATABASE js_forum;
 USE js_forum;
@@ -93,6 +97,7 @@ SOURCE database/schema.sql;
 ```
 
 6. Lancer le serveur en mode développement :
+
 ```bash
 npm run dev
 ```
