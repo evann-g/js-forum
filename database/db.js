@@ -1,18 +1,13 @@
-'use strict';
+import mysql from "mysql2/promise";
 
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-
-const DB_PATH = path.join(__dirname, 'uno.db');
-
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error("Impossible d'ouvrir la base de données:", err.message);
-  } else {
-    console.log('Base de données connectée:', DB_PATH);
-  }
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-
-
-module.exports = db;
+export default pool;

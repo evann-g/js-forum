@@ -1,5 +1,6 @@
 import express from "express";  // ← était require(), incompatible avec les autres import
 import path from "path";
+import"dotenv/config";
 import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -19,7 +20,7 @@ app.use(express.json());
 
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
-  cors: { origin: "*" },
+  cors: { origin: process.env.CORS_ORIGIN || "http://localhost:8000" },
 });
 
 app.use(express.static(path.join(__dirname, "../..")));
