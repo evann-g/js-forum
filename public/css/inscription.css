@@ -12,11 +12,11 @@ form {
     padding: 20px;
     border-radius: 100px;
     width: 500px;
-    height: 550px;
+    height: 380px;
     margin: 200px auto;
 }
 h1 {
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     text-align: center;
 }
 
@@ -30,4 +30,17 @@ input {
 a{
     margin-top: 20px;
     color :red
+}
+.nomsite{
+    position:absolute;top:0%;
+    position:absolute;left:0%;
+    position:absolute;right:0%;
+    height: 80px;
+    background-color : rgb(0, 0, 0);
+}
+@media screen and (max-width: 700px) {
+  .container,
+  .navbar {
+    flex-direction: column;
+  }
 }

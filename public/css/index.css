@@ -1,0 +1,57 @@
+body {
+    background-color: rgb(42, 42, 42);
+    color: white;
+    font-family: Arial, sans-serif;
+}
+ul {
+    position:absolute;top:0%;
+    position:absolute;left:0%;
+    position:absolute;right:0%;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+    width: 100%;
+}
+
+ul li {
+    float: left;
+}
+
+ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+ul li a:hover {
+    background-color: #111111;
+}
+ul input {
+    float: center;
+}
+input{
+    border-radius: 110000;
+    width: 30%;
+    padding: 6px;
+    margin-top: 8px;
+    font-size: 17px;
+    text-align: center;
+}
+.search-container button {
+  padding: 6px 10px;
+  margin-top: 8px;
+  background: #ddd;
+  font-size: 17px;
+  border: none;
+  cursor: pointer;
+}
+@media screen and (max-width: 700px) {
+  .container,
+  .navbar {
+    flex-direction: column;
+  }
+}
