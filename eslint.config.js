@@ -1,14 +1,13 @@
-import js from "@eslint/js";
+/*@type {import("eslint").Linter.Config[]} */
 
-/** @type {import("eslint").Linter.Config[]} */
 export default [
-  js.configs.recommended,
+
   {
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
+
       globals: {
-        // Node.js globals
         process: "readonly",
         __dirname: "readonly",
         __filename: "readonly",
