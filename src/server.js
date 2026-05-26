@@ -7,6 +7,7 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
+import {openDb} from "../database/db.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -38,5 +39,5 @@ process.on("uncaughtException", (err) => {
 });
 
 httpServer.listen(config.port, "0.0.0.0", () => {
-  console.log('Server running on http://0.0.0.0:${config.port}');
+  console.log('Server running on http://0.0.0.0:' + config.port);
 });
