@@ -2,11 +2,11 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { config } from "./config.js";
-import { applyBodyParsing } from "./middleware/bodyParser.js";
+import { config } from "./config/config.js";
+import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import router from "./routes/index.js";
+import router from "./router/index.js";
 
 const app = express();
 const httpServer = createServer(app);
