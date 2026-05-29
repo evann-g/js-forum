@@ -9,11 +9,10 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
-import db from "../database/db.js";
 import { authentification } from "./services/auth.js";
 
-const __filename = fileURLToPath(import.meta.url);  
-const __dirname = path.dirname(__filename);          
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -28,8 +27,7 @@ applyLogger(app);
 
 app.use("/api", router);
 
-app.use(errorHandler);
-
+// Page routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/login.html"));
 });
@@ -40,39 +38,39 @@ app.get("/inscription", (req, res) => {
 
 app.get("/index", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/index.html"));
-})
-console.log("test authentification", await authentification("alice" ,"admin" ))
+});
+
+// Login handler
 app.post("/", async (req, res) => {
   const { username, password } = req.body;
-  
+
   try {
     const result = await authentification(username, password);
-    console.log("test try")
-    if (result == true) {
+    if (result.success) {
       res.send(`Bienvenue, ${result.user.username} !`);
-      console.log("test bon compte")
     } else {
       res.status(401).send(`Erreur : ${result.message}`);
-      console.log("test faux compte")
     }
   } catch (err) {
     res.status(500).send("Erreur serveur : " + err.message);
   }
 });
 
+app.use(errorHandler);
+
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
   socket.on("error", (err) => {
-    console.log("Erreur socket:", err.message);
+    console.error("Erreur socket:", err.message);
   });
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("Unhandled promise Rejection:", reason);
-})
+  console.error("Unhandled promise rejection:", reason);
+});
 
 process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err.message);
+  console.error("Uncaught exception:", err.message);
 });
 
 httpServer.listen(config.port, "0.0.0.0", () => {

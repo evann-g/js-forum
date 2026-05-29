@@ -1,42 +1,48 @@
 import sqlite3 from 'sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const db = new sqlite3.Database('./database/BaseDeDonné.db');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const db = new sqlite3.Database(path.join(__dirname, 'forum.db'));
 
 const schema = `
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY,
-  username VARCHAR,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username VARCHAR NOT NULL UNIQUE,
   email VARCHAR,
-  password VARCHAR,
-  role VARCHAR,
-  created_at TIMESTAMP
+  password VARCHAR NOT NULL,
+  role VARCHAR DEFAULT 'member',
+  created_at TIMESTAMP DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS topics (
-  id INTEGER PRIMARY KEY,
-  title VARCHAR,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title VARCHAR NOT NULL,
   description TEXT,
-  created_at TIMESTAMP
+  created_at TIMESTAMP DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS posts (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   topic_id INTEGER NOT NULL,
   title VARCHAR,
   body TEXT,
   user_id INTEGER NOT NULL,
-  status VARCHAR,
-  likes INTEGER,
-  dislikes INTEGER,
-  created_at TIMESTAMP,
+  status VARCHAR DEFAULT 'open',
+  likes INTEGER DEFAULT 0,
+  dislikes INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT (datetime('now')),
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (topic_id) REFERENCES topics(id)
 );
 
 CREATE TABLE IF NOT EXISTS follows (
-  following_user_id INTEGER,
-  followed_user_id INTEGER,
-  created_at TIMESTAMP,
+  following_user_id INTEGER NOT NULL,
+  followed_user_id INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT (datetime('now')),
+  PRIMARY KEY (following_user_id, followed_user_id),
   FOREIGN KEY (following_user_id) REFERENCES users(id),
   FOREIGN KEY (followed_user_id) REFERENCES users(id)
 );
@@ -44,17 +50,20 @@ CREATE TABLE IF NOT EXISTS follows (
 
 db.exec(schema);
 
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (0, 'alice', 'admin', 'admin')");
-db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (1, 'Bob', 'moderator')");
-db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (2, 'Candice', 'moderator')");
-db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (3, 'David', 'member')");
+// Seed data — passwords are bcrypt hashes of 'admin' / placeholder
+// NOTE: In production, remove these seeds and register users properly.
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (1, 'alice', '$2b$12$placeholder_replace_with_real_hash', 'admin')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (2, 'Bob', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (3, 'Candice', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (4, 'David', '$2b$12$placeholder_replace_with_real_hash', 'member')");
 
-db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (1, 0, '2026-01-01')");
-db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (3, 2, '2026-02-28')");
+db.run("INSERT OR IGNORE INTO topics (id, title) VALUES (1, 'General')");
 
-db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (0, 'Welcome to the forum!', 0)");
-db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (1, 'Guidelines', 1)");
-db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (2, 'Hello all!', 3)");
+db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (1, 1, 'Welcome to the forum!', 1)");
+db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (2, 1, 'Guidelines', 2)");
+db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (3, 1, 'Hello all!', 4)");
 
+db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (2, 1, '2026-01-01')");
+db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (4, 3, '2026-02-28')");
 
 export default db;
