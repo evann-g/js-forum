@@ -9,7 +9,8 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
-import { authentification } from "./services/auth.js";
+import db from "../database/db.js";
+import { authentification , adduser} from "./services/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,8 +47,10 @@ app.post("/", async (req, res) => {
 
   try {
     const result = await authentification(username, password);
-    if (result.success) {
-      res.send(`Bienvenue, ${result.user.username} !`);
+    console.log("test try")
+    if (result == true) {
+      res.send(`Bienvenue, ${result.username} !`);
+      console.log("test bon compte")
     } else {
       res.status(401).send(`Erreur : ${result.message}`);
     }
@@ -56,7 +59,24 @@ app.post("/", async (req, res) => {
   }
 });
 
-app.use(errorHandler);
+app.post("/inscription", async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    const result = await authentification(username, password);
+    console.log("test try")
+    if (result == true) {
+      res.send(`compte existent !`);
+      console.log("test mauvais")
+    } else {
+      const add = adduser(username, password);
+      res.send(`compte créé !`);
+    }
+  } catch (err) {
+    res.status(500).send("Erreur serveur : " + err.message);
+  }
+});
+
 
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);

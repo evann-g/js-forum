@@ -41,4 +41,4 @@ async function authentification(username, password) {
   });
 }
 
-export { addUser, authentification };
+export { authentification , adduser}
