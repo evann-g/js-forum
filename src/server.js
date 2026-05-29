@@ -49,7 +49,7 @@ app.post("/", async (req, res) => {
     const result = await authentification(username, password);
     console.log("test try")
     if (result == true) {
-      res.send(`Bienvenue, ${result.user.username} !`);
+      res.send(`Bienvenue, ${result.username} !`);
       console.log("test bon compte")
     } else {
       res.status(401).send(`Erreur : ${result.message}`);
