@@ -6,6 +6,9 @@ router.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
 
+router.get('/login', (req, res) => {
+    res.json({ message: 'API is running' });
+});
 
 // TODO: add routes as you build them out
 

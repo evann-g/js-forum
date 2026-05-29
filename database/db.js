@@ -1,6 +1,6 @@
 import sqlite3 from 'sqlite3';
 
-const db = new sqlite3.Database('./database/db.db');
+const db = new sqlite3.Database('./database/BaseDeDonné.db');
 
 const schema = `
 CREATE TABLE IF NOT EXISTS users (
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS follows (
 
 db.exec(schema);
 
-db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (0, 'Alice', 'admin')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (0, 'alice', 'admin', 'admin')");
 db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (1, 'Bob', 'moderator')");
 db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (2, 'Candice', 'moderator')");
 db.run("INSERT OR IGNORE INTO users (id, username, role) VALUES (3, 'David', 'member')");
@@ -55,5 +55,6 @@ db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, crea
 db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (0, 'Welcome to the forum!', 0)");
 db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (1, 'Guidelines', 1)");
 db.run("INSERT OR IGNORE INTO posts (id, title, user_id) VALUES (2, 'Hello all!', 3)");
+
 
 export default db;
