@@ -10,7 +10,7 @@ import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
 import db from "../database/db.js";
-import { authentification } from "./services/auth.js";
+import { authentification , adduser} from "./services/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);  
 const __dirname = path.dirname(__filename);          
@@ -59,6 +59,25 @@ app.post("/", async (req, res) => {
     res.status(500).send("Erreur serveur : " + err.message);
   }
 });
+
+app.post("/inscription", async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    const result = await authentification(username, password);
+    console.log("test try")
+    if (result == true) {
+      res.send(`compte existent !`);
+      console.log("test mauvais")
+    } else {
+      const add = adduser(username, password);
+      res.send(`compte créé !`);
+    }
+  } catch (err) {
+    res.status(500).send("Erreur serveur : " + err.message);
+  }
+});
+
 
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);

@@ -21,4 +21,4 @@ function authentification(user, password) {
 }
     
 
-export { authentification }
+export { authentification , adduser}
