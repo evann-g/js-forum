@@ -9,8 +9,7 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
-import db from "../database/db.js";
-import { authentification , adduser} from "./services/auth.js";
+import { authentification, addUser, userExists } from "./services/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,13 +43,10 @@ app.get("/index", (req, res) => {
 // Login handler
 app.post("/", async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const result = await authentification(username, password);
-    console.log("test try")
-    if (result == true) {
-      res.send(`Bienvenue, ${result.username} !`);
-      console.log("test bon compte")
+    if (result.success) {
+      res.send(`Bienvenue, ${result.user.username} !`);
     } else {
       res.status(401).send(`Erreur : ${result.message}`);
     }
@@ -59,24 +55,23 @@ app.post("/", async (req, res) => {
   }
 });
 
+// Registration handler
 app.post("/inscription", async (req, res) => {
-  const { username, password } = req.body;
-  
+  const { username, email, password } = req.body;
   try {
-    const result = await authentification(username, password);
-    console.log("test try")
-    if (result == true) {
-      res.send(`compte existent !`);
-      console.log("test mauvais")
+    const exists = await userExists(username);
+    if (exists) {
+      res.status(409).send("Erreur : ce nom d'utilisateur est déjà pris !");
     } else {
-      const add = adduser(username, password);
-      res.send(`compte créé !`);
+      await addUser(username, email, password);
+      res.send("Compte créé !");
     }
   } catch (err) {
     res.status(500).send("Erreur serveur : " + err.message);
   }
 });
 
+app.use(errorHandler);
 
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
@@ -94,5 +89,5 @@ process.on("uncaughtException", (err) => {
 });
 
 httpServer.listen(config.port, "0.0.0.0", () => {
-  console.log('Server running on http://0.0.0.0:' + config.port);
+  console.log('Server running on http://localhost:' + config.port);
 });

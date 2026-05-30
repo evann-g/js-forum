@@ -1,10 +1,19 @@
 import bcrypt from "bcrypt";
 import db from "../../database/db.js";
 
-/**
- * Register a new user.
- * Password is hashed with bcrypt before storage.
- */
+async function userExists(username) {
+  return new Promise((resolve, reject) => {
+    db.get(
+      "SELECT id FROM users WHERE username = ?",
+      [username],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(!!row);
+      }
+    );
+  });
+}
+
 async function addUser(username, email, password) {
   const hashed = await bcrypt.hash(password, 12);
   return new Promise((resolve, reject) => {
@@ -19,10 +28,6 @@ async function addUser(username, email, password) {
   });
 }
 
-/**
- * Authenticate a user.
- * Returns { success: true, user: { id, username } } or { success: false, message }.
- */
 async function authentification(username, password) {
   return new Promise((resolve, reject) => {
     db.get(
@@ -41,4 +46,4 @@ async function authentification(username, password) {
   });
 }
 
-export { authentification , adduser}
+export { authentification, addUser, userExists };
