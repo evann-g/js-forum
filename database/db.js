@@ -52,10 +52,10 @@ db.exec(schema);
 
 // Seed data — passwords are bcrypt hashes of 'admin' / placeholder
 // NOTE: In production, remove these seeds and register users properly.
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (1, 'alice', '$2b$12$placeholder_replace_with_real_hash', 'admin')");
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (2, 'Bob', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (3, 'Candice', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (4, 'David', '$2b$12$placeholder_replace_with_real_hash', 'member')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (1, 'alice', 'admin', 'admin')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (2, 'Bob', 'bob', 'moderator')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (3, 'Candice', 'candice', 'moderator')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (4, 'David', 'david', 'member')");
 
 db.run("INSERT OR IGNORE INTO topics (id, title) VALUES (1, 'General')");
 
