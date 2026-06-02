@@ -29,6 +29,9 @@ app.use("/api", router);
 
 // Page routes
 app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/templates/forum.html"));
+});
+app.get("/login", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/login.html"));
 });
 
@@ -36,12 +39,8 @@ app.get("/inscription", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));
 });
 
-app.get("/index", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/index.html"));
-});
-
 // Login handler
-app.post("/", async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const result = await authentification(username, password);

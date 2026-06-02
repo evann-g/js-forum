@@ -12,7 +12,7 @@
         <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">&#9776;</button>
         <div class="navbar-actions">
             <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">dark</button>
-            <button class="btn btn-outline"> <a href="/login"> Sign In </a> </button>
+            <button class="btn btn-outline" id="profilBtn">  profil  </button>
         </div>
     </div>
 
@@ -72,6 +72,10 @@
             const isDark = document.body.classList.contains('dark');
             themeBtn.textContent = isDark ? 'light' : 'dark';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        profilBtn.addEventListener('click', () => {
+            window.location.href = '/profile';
         });
     </script>
     
