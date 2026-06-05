@@ -6,7 +6,7 @@ router.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
 
-router.get('/login', (req, res) => {
+router.get('/login.html', (req, res) => {
     res.json({ message: 'API is running' });
 });
 
