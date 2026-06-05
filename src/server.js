@@ -1,7 +1,9 @@
 import "dotenv/config";
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from "express";
+import db from '../database/db.js';
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { config } from "./config/config.js";
@@ -10,6 +12,7 @@ import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
 import { authentification, addUser, userExists } from "./services/auth.js";
+import { closeDb } from '../database/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,33 +44,33 @@ app.get("/inscription", (req, res) => {
 
 // Login handler
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const result = await authentification(username, password);
-    if (result.success) {
-      res.send(`Bienvenue, ${result.user.username} !`);
-    } else {
-      res.status(401).send(`Erreur : ${result.message}`);
+    const { username, password } = req.body;
+    try {
+        const result = await authentification(username, password);
+        if (result.success) {
+            res.redirect("/");
+        } else {
+            res.redirect(`/login?error=${encodeURIComponent(result.message)}`);
+        }
+    } catch (err) {
+        res.redirect(`/login?error=${encodeURIComponent("Erreur serveur : " + err.message)}`);
     }
-  } catch (err) {
-    res.status(500).send("Erreur serveur : " + err.message);
-  }
 });
 
 // Registration handler
 app.post("/inscription", async (req, res) => {
-  const { username, email, password } = req.body;
-  try {
-    const exists = await userExists(username);
-    if (exists) {
-      res.status(409).send("Erreur : ce nom d'utilisateur est déjà pris !");
-    } else {
-      await addUser(username, email, password);
-      res.send("Compte créé !");
+    const { username, email, password } = req.body;
+    try {
+        const exists = await userExists(username);
+        if (exists) {
+            res.redirect(`/inscription?error=${encodeURIComponent("Ce nom d'utilisateur est déjà pris !")}`);
+        } else {
+            await addUser(username, email, password);
+            res.redirect("/login?error=" + encodeURIComponent("Compte créé ! Vous pouvez vous connecter."));
+        }
+    } catch (err) {
+        res.redirect(`/inscription?error=${encodeURIComponent("Erreur serveur : " + err.message)}`);
     }
-  } catch (err) {
-    res.status(500).send("Erreur serveur : " + err.message);
-  }
 });
 
 app.use(errorHandler);
@@ -89,4 +92,35 @@ process.on("uncaughtException", (err) => {
 
 httpServer.listen(config.port, "0.0.0.0", () => {
   console.log('Server running on http://localhost:' + config.port);
+});
+
+process.on('SIGINT', () => {
+    console.log('\n[INFO] Arret du serveur. Nettoyage en cours...');
+
+    db.close((err) => {
+        if (err) {
+            console.log('[ERREUR] Fermeture DB:', err.message);
+        } else {
+            console.log('[OK] Base de donnees fermee.');
+        }
+
+        const filesToDelete = [
+            path.join(__dirname, '../database/forum.db'),
+            path.join(__dirname, '../nodemon-debug.log'),
+        ];
+
+        for (const file of filesToDelete) {
+            try {
+                if (fs.existsSync(file)) {
+                    fs.unlinkSync(file);
+                    console.log(`[OK] ${file} supprime.`);
+                }
+            } catch (e) {
+                console.log(`[ERREUR] ${file}: ${e.message}`);
+            }
+        }
+
+        console.log('[INFO] Nettoyage termine.');
+        process.exit(0);
+    });
 });

@@ -3,28 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./css/inscription.css">
-    <title>inscription</title>
+    <link rel="stylesheet" href="/css/inscription.css">
+    <title>Inscription — Mon Forum</title>
 </head>
 <body>
     <div class="nomsite">
         <h1>Mon forum</h1>
     </div>
-    <form action="./inscription" method="POST">
-        <h1>Inscription</h1>
-        <label for="username">Username:</label>
-        <input type="username" id="username" name="username" required="" placeholder="Entrez votre nom d'utilisateur">
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required="" placeholder="Entrez votre adresse email">
-        <br>
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" name="password" required="" placeholder="Entrez votre mot de passe">
-        <br>
-        <button type="submit">S'inscrire</button>
-        <br>
-        <br>
-        <a href="/">Vous avez déjà un compte ? connecter-vous</a>
-    </form>
+    <div class="page-center">
+        <form action="/inscription" method="POST" id="inscriptionForm">
+            <h1>Inscription</h1>
+            <div class="field">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur">
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Votre adresse email">
+            </div>
+            <div class="field">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+            </div>
+            <div class="field">
+                <label for="confirmPassword">Confirmer le mot de passe</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirmez votre mot de passe">
+            </div>
+            <p id="error-msg"></p>
+            <button type="submit">Créer mon compte</button>
+            <a href="/login">Déjà un compte ? Connectez-vous</a>
+        </form>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const error = params.get("error");
+        if (error) {
+            const msg = document.getElementById("error-msg");
+            msg.textContent = decodeURIComponent(error);
+            msg.style.display = "block";
+        }
+
+        document.getElementById("inscriptionForm").addEventListener("submit", (e) => {
+            const password = document.getElementById("password").value;
+            const confirm = document.getElementById("confirmPassword").value;
+            const msg = document.getElementById("error-msg");
+            if (password !== confirm) {
+                e.preventDefault();
+                msg.textContent = "Les mots de passe ne correspondent pas.";
+                msg.style.display = "block";
+                return;
+            }
+            msg.style.display = "none";
+        });
+
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    </script>
 </body>
 </html>

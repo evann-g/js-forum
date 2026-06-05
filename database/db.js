@@ -52,7 +52,7 @@ db.exec(schema);
 
 // Seed data — passwords are bcrypt hashes of 'admin' / placeholder
 // NOTE: In production, remove these seeds and register users properly.
-db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (1, 'alice', 'admin', 'admin')");
+db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (1, 'alice', '$2b$12$0xQz7bW1E3XYYkX9Rtr4/u2CZwWcUfJH5mvawK6Q8FdhZPtTrJcp6', 'admin')");
 db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (2, 'Bob', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
 db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (3, 'Candice', '$2b$12$placeholder_replace_with_real_hash', 'moderator')");
 db.run("INSERT OR IGNORE INTO users (id, username, password, role) VALUES (4, 'David', '$2b$12$placeholder_replace_with_real_hash', 'member')");
@@ -65,5 +65,12 @@ db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (3, 1,
 
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (2, 1, '2026-01-01')");
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (4, 3, '2026-02-28')");
+
+export const closeDb = () => new Promise((resolve, reject) => {
+    db.close((err) => {
+        if (err) reject(err);
+        else resolve();
+    });
+});
 
 export default db;
