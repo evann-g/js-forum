@@ -12,6 +12,7 @@ import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
 import { closeDb } from '../database/db.js';
+import session from 'express-session';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +24,18 @@ const io = new SocketIOServer(httpServer, {
 });
 
 app.use(express.static(path.join(__dirname, '../public')));
+
+app.use(session({
+  secret: 'ton_secret_ici',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
+applyBodyParsing(app);
+applyLogger(app);
+
+app.use("/api", router);
 
 applyBodyParsing(app);
 applyLogger(app);
@@ -45,6 +58,17 @@ app.get("/co", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/forum_co.html"));
 });
 
+app.get("/me", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/templates/profil.html"));
+});
+
+app.use(session({
+  secret: 'ton_secret_ici',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+
 app.use(errorHandler);
 
 io.on("connection", (socket) => {
@@ -65,6 +89,8 @@ process.on("uncaughtException", (err) => {
 httpServer.listen(config.port, "0.0.0.0", () => {
   console.log('Server running on http://localhost:' + config.port);
 });
+
+
 
 process.on('SIGINT', () => {
     console.log('\n[INFO] Arret du serveur. Nettoyage en cours...');
