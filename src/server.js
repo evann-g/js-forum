@@ -11,7 +11,6 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
-import { authentification, addUser, userExists } from "./services/auth.js";
 import { closeDb } from '../database/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -42,20 +41,8 @@ app.get("/inscription", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));
 });
 
-// Registration handler
-app.post("/inscription", async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        const exists = await userExists(username);
-        if (exists) {
-            res.redirect(`/inscription?error=${encodeURIComponent("Ce nom d'utilisateur est déjà pris !")}`);
-        } else {
-            await addUser(username, email, password);
-            res.redirect("/login?error=" + encodeURIComponent("Compte créé ! Vous pouvez vous connecter."));
-        }
-    } catch (err) {
-        res.redirect(`/inscription?error=${encodeURIComponent("Erreur serveur : " + err.message)}`);
-    }
+app.get("/co", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/templates/forum_co.html"));
 });
 
 app.use(errorHandler);

@@ -11,7 +11,7 @@
         <h1>Mon forum</h1>
     </div>
     <div class="page-center">
-        <form action="/inscription" method="POST" id="inscriptionForm">
+        <form action="/api/auth/inscription" method="POST" id="inscriptionForm">
             <h1>Inscription</h1>
             <div class="field">
                 <label for="username">Nom d'utilisateur</label>
@@ -35,28 +35,24 @@
         </form>
     </div>
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const error = params.get("error");
-        if (error) {
-            const msg = document.getElementById("error-msg");
-            msg.textContent = decodeURIComponent(error);
-            msg.style.display = "block";
-        }
-
-        document.getElementById("inscriptionForm").addEventListener("submit", (e) => {
-            const password = document.getElementById("password").value;
-            const confirm = document.getElementById("confirmPassword").value;
-            const msg = document.getElementById("error-msg");
-            if (password !== confirm) {
-                e.preventDefault();
-                msg.textContent = "Les mots de passe ne correspondent pas.";
-                msg.style.display = "block";
-                return;
-            }
-            msg.style.display = "none";
+    document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: e.target.username.value,
+            email: e.target.email.value,
+            password: e.target.password.value,
+        })
         });
-
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+        const data = await res.json();
+        if (!res.ok) {
+        document.getElementById('error-msg').textContent = data.error;
+        } else {
+        window.location.href = '/'; // redirection après login
+        }
+    });
     </script>
 </body>
 </html>
