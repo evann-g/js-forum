@@ -43,24 +43,12 @@ applyLogger(app);
 app.use("/api", router);
 
 // Page routes
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/forum.html"));
-});
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/login.html"));
-});
-
-app.get("/inscription", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));
-});
-
-app.get("/co", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/forum_co.html"));
-});
-
-app.get("/me", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/profil.html"));
-});
+app.get("/", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/forum.html"));});
+app.get("/login", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/login.html"));});
+app.get("/inscription", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));});
+app.get("/co", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/forum_co.html"));});
+app.get("/me", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/profil.html"));});
+app.get("/post", (req, res) => {res.sendFile(path.join(__dirname, "../public/templates/post.html"));});
 
 app.use(session({
   secret: 'ton_secret_ici',
