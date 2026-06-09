@@ -66,4 +66,11 @@ db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (3, 1,
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (2, 1, '2026-01-01')");
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (4, 3, '2026-02-28')");
 
+export const closeDb = () => new Promise((resolve, reject) => {
+    db.close((err) => {
+        if (err) reject(err);
+        else resolve();
+    });
+});
+
 export default db;

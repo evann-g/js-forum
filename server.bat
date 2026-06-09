@@ -35,4 +35,27 @@ echo [INFO] Demarrage du serveur...
 echo.
 npm run dev
 
+:: --- Runs after server stops (Ctrl+C) ---
+echo.
+echo [INFO] Arret du serveur. Nettoyage en cours...
+
+:: Delete the database
+if exist "database\forum.db" (
+    del /f /q "database\forum.db"
+    echo [OK] Base de donnees supprimee.
+)
+
+:: Delete any temp files (add more patterns as needed)
+if exist "tmp\" (
+    rd /s /q "tmp"
+    echo [OK] Dossier tmp supprime.
+)
+
+:: Delete nodemon log if it exists
+if exist "nodemon-debug.log" (
+    del /f /q "nodemon-debug.log"
+    echo [OK] nodemon-debug.log supprime.
+)
+
+echo [INFO] Nettoyage termine.
 pause
