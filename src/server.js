@@ -39,21 +39,6 @@ app.get("/inscription", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));
 });
 
-// Login handler
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const result = await authentification(username, password);
-    if (result.success) {
-      res.send(`Bienvenue, ${result.user.username} !`);
-    } else {
-      res.status(401).send(`Erreur : ${result.message}`);
-    }
-  } catch (err) {
-    res.status(500).send("Erreur serveur : " + err.message);
-  }
-});
-
 // Registration handler
 app.post("/inscription", async (req, res) => {
   const { username, email, password } = req.body;
