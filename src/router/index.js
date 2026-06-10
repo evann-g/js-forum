@@ -1,32 +1,43 @@
 import { Router } from 'express';
-import { login, register } from '../handlers/auth.js';
+import { login, register, logoutHandler, me } from '../handlers/auth.js';
+import { listPosts, getPost, createPost, updatePost, deletePost } from '../handlers/post.js';
+import { listComments, addComment, editComment, removeComment } from '../handlers/comment.js';
+import { likePost, dislikePost, likeComment, dislikeComment } from '../handlers/like.js';
+import { listCategories } from '../handlers/category.js';
+import { requireAuth } from '../middleware/auth.js';
+import { authLimiter, apiLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
-router.get('/', (req, res) => {
-    res.json({ message: 'API is running' });
-});
+// Health
+router.get('/', (req, res) => res.json({ message: 'API is running' }));
 
-router.get('/login.html', (req, res) => {
-    res.json({ message: 'API is running' });
-});
+// Auth
+router.post('/auth/login', authLimiter, login);
+router.post('/auth/inscription', authLimiter, register);
+router.post('/auth/logout', logoutHandler);
+router.get('/auth/me', requireAuth, me);
 
-router.get('/me', (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'Non connecté' });
-  }
-  res.json({ user: req.session.user });
-});
+// Categories
+router.get('/categories', listCategories);
 
-router.get('/inscription.html', (req, res) => {
-    res.json({ message: 'API is running' });
-});
+// Posts
+router.get('/posts', apiLimiter, listPosts);
+router.get('/posts/:id', apiLimiter, getPost);
+router.post('/posts', requireAuth, createPost);
+router.put('/posts/:id', requireAuth, updatePost);
+router.delete('/posts/:id', requireAuth, deletePost);
 
-router.post('/auth/login', login);
-router.post('/auth/inscription', register);
+// Comments
+router.get('/posts/:postId/comments', listComments);
+router.post('/posts/:postId/comments', requireAuth, addComment);
+router.put('/comments/:id', requireAuth, editComment);
+router.delete('/comments/:id', requireAuth, removeComment);
 
-// TODO: add routes as you build them out
+// Votes
+router.post('/posts/:id/like', requireAuth, likePost);
+router.post('/posts/:id/dislike', requireAuth, dislikePost);
+router.post('/comments/:id/like', requireAuth, likeComment);
+router.post('/comments/:id/dislike', requireAuth, dislikeComment);
 
 export default router;
-
-
