@@ -3,7 +3,7 @@ import { findByUsername, createUser } from "../repository/user.js";
 import { createSession, deleteSession } from "../repository/session.js";
 import { generateSessionId } from "../utils/cookie.js";
 
-const SessION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function userExists(username) {
     const user = await findByUsername(username);
@@ -29,7 +29,7 @@ export async function authentification(username, password) {
   };
   
   const sessionId = generateSessionId();
-  const expiresAt = new Date(Date.now() + SessION_DURATION);
+  const expiresAt = new Date(Date.now() + SESSION_DURATION);
 
   await createSession(sessionId, user.id, expiresAt);
 

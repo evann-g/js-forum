@@ -1,23 +1,21 @@
 import * as likeRepo from "../repository/like.js";
 
-export async function voteOnPost(userId, postId) {
+export async function voteOnPost(userId, postId, vote) {
     const current = await likeRepo.getPostVote(userId, postId);
     if (current === vote) {
-        return await likeRepo.deletePostVote(userId, postId);
+        await likeRepo.deletePostVote(userId, postId);
     } else {
-        return await likeRepo.createPostVote(userId, postId);
+        await likeRepo.upsertPostVote(userId, postId, vote);
     }
-    
     await likeRepo.recalcPostVotes(postId);
 }
 
-export async function voteOnComment(userId, commentId) {
+export async function voteOnComment(userId, commentId, vote) {
     const current = await likeRepo.getCommentVote(userId, commentId);
     if (current === vote) {
-        return await likeRepo.deleteCommentVote(userId, commentId);
+        await likeRepo.deleteCommentVote(userId, commentId);
     } else {
-        return await likeRepo.createCommentVote(userId, commentId);
+        await likeRepo.upsertCommentVote(userId, commentId, vote);
     }
-    
     await likeRepo.recalcCommentVotes(commentId);
 }

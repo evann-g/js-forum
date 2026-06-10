@@ -30,7 +30,7 @@ export function getCommentById(commentId) {
             }
         );
     });
-};
+}
 
 export function createComment(data) {
     const { post_id, user_id, body } = data;

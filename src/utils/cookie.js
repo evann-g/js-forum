@@ -14,26 +14,26 @@ export function parseCookies(cookieHeader = '') {
 export function buildCookie(name, value, options = {}) {
     const {
         httpOnly = true,
-        secure = process.env.name === 'production',
+        secure = process.env.NODE_ENV === 'production',
         sameSite = 'Lax',
         path = '/',
         maxAge = 60 * 60 * 24 * 7, // 7 days
     } = options;
 
-    let cookie = `${encodeURIComponent(name)} = ${encodeURIComponent(value)}; Path`;
+    let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
     cookie += `; Path=${path}`;
     cookie += `; Max-Age=${maxAge}`;
-    
+
     if (httpOnly) cookie += '; HttpOnly';
     if (secure) cookie += '; Secure';
-    
+
     cookie += `; SameSite=${sameSite}`;
-    
+
     return cookie;
 }
 
 export function buildExpireCookie(name) {
-    return `${encodeURIComponent(name)}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
+    return `${encodeURIComponent(name)}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`;
 }
 
 export function generateSessionId() {
