@@ -1,10 +1,11 @@
 import db from '../../database/db.js';
 
-export function createSession(id, userId, expiresAt) {
+export function createSession(userId, token, expiresAt) {
     return new Promise((resolve, reject) => {
+        
         db.run(
-            "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)",
-            [id, userId, expiresAt.toISOString()],
+            "INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)",
+            [userId, token, new Date(expiresAt).toISOString()],
             function (err) { if (err) reject(err); else resolve(); }
         );
     });

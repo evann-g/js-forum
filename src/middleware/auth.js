@@ -20,6 +20,16 @@ export async function requireAuth(req, res, next) {
     }
 }
 
+export function nomUtilisateur(req, res, next) {
+    db.get("SELECT username FROM users WHERE id = ?", [req.user.user_id], (err, row) => {
+        if (err) return next(err);
+        req.user.username = row ? row.username : null;
+        next();
+    });
+}
+    
+
+
 export function requireRole(...roles) {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {

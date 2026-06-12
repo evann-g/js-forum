@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { findByUsername, createUser } from "../repository/user.js";
 import { createSession, deleteSession } from "../repository/session.js";
-import { generateSessionId } from "../utils/cookie.js";
+import { generateSessionId ,buildCookie} from "../utils/cookie.js";
 
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -30,8 +30,8 @@ export async function authentification(username, password) {
   
   const sessionId = generateSessionId();
   const expiresAt = new Date(Date.now() + SESSION_DURATION);
-
-  await createSession(sessionId, user.id, expiresAt);
+  const token = buildCookie('session_id', sessionId, { maxAge: 7 * 24 * 60 * 60, } )
+  await createSession(/*sessionId,*/ user.id, token, expiresAt);
 
   return {
     success: true,

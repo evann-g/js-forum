@@ -46,6 +46,16 @@ CREATE TABLE IF NOT EXISTS follows (
   FOREIGN KEY (following_user_id) REFERENCES users(id),
   FOREIGN KEY (followed_user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  token VARCHAR NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT (datetime('now')),
+  expires_at TIMESTAMP NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 `;
 
 db.exec(schema);
@@ -66,11 +76,16 @@ db.run("INSERT OR IGNORE INTO posts (id, topic_id, title, user_id) VALUES (3, 1,
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (2, 1, '2026-01-01')");
 db.run("INSERT OR IGNORE INTO follows (following_user_id, followed_user_id, created_at) VALUES (4, 3, '2026-02-28')");
 
+db.run("INSERT OR IGNORE INTO sessions (user_id, token, expires_at) VALUES (1, 'session_token_1', '2026-01-01 00:00:00')");
+db.run("INSERT OR IGNORE INTO sessions (user_id, token, expires_at) VALUES (2, 'session_token_2', '2026-01-01 00:00:00')");
+
 export const closeDb = () => new Promise((resolve, reject) => {
     db.close((err) => {
         if (err) reject(err);
         else resolve();
     });
 });
+
+
 
 export default db;
