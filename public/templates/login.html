@@ -1,27 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/login.css">
-    <title>Document</title>
+    <link rel="stylesheet" href="/css/login.css">
+    <title>Connexion — Mon Forum</title>
 </head>
 <body>
     <div class="nomsite">
         <h1>Mon forum</h1>
     </div>
-    <form action="/login" method="POST">
-        <h1>Connection</h1>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required="">
-        <br>
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" name="password" required="">
-        <br>
-        <button type="submit">Se connecter</button>
-        <br>
-        <br>
-        <a href="/inscription">Vous avez pas de compte ? inscrivez-vous</a>
-    </form>
+    <div class="page-center">
+        <form id="login-form" action="/api/auth/login" method="POST">
+            <h1>Connexion</h1>
+            <div class="field">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur">
+            </div>
+            <div class="field">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+            </div>
+            <p id="error-msg"></p>
+            <button type="submit">Se connecter</button>
+            <a href="/inscription">Pas encore de compte ? Inscrivez-vous</a>
+        </form>
+    </div>
+    <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: e.target.username.value,
+            password: e.target.password.value,
+        })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+        document.getElementById('error-msg').textContent = data.error;
+        } else {
+        window.location.href = '/co'; // redirection après login
+        }
+    });
+    </script>
 </body>
 </html>

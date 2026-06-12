@@ -1,57 +1,101 @@
-body {
-    background-color: rgb(42, 42, 42);
-    color: white;
-    font-family: Arial, sans-serif;
-}
-ul {
-    position:absolute;top:0%;
-    position:absolute;left:0%;
-    position:absolute;right:0%;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #333333;
-    width: 100%;
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg:        #F8FAFC;
+    --surface:   #FFFFFF;
+    --text:      #0F172A;
+    --text-sec:  #64748B;
+    --border:    #E2E8F0;
+    --link:      #0891B2;
+    --cyan:      #06B6D4;
+    --cyan-h:    #0891B2;
+    --purple:    #7C3AED;
+    --purple-h:  #6D28D9;
+    --font: 'IBM Plex Sans', system-ui, sans-serif;
+    --transition: 0.2s ease;
 }
 
-ul li {
-    float: left;
+body.dark {
+    --bg:        #0F172A;
+    --surface:   #111827;
+    --text:      #F8FAFC;
+    --text-sec:  #94A3B8;
+    --border:    #334155;
+    --link:      #22D3EE;
+}
+
+body {
+    font-family: var(--font);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    transition: background var(--transition), color var(--transition);
+}
+
+ul {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    list-style-type: none;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    z-index: 100;
+    transition: background var(--transition), border-color var(--transition);
 }
 
 ul li a {
     display: block;
-    color: white;
+    color: var(--text-sec);
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color var(--transition);
 }
 
-ul li a:hover {
-    background-color: #111111;
-}
-ul input {
-    float: center;
-}
-input{
-    border-radius: 110000;
+ul li a:hover { color: var(--cyan); }
+
+input {
+    border-radius: 6px;
     width: 30%;
-    padding: 6px;
+    padding: 7px 12px;
     margin-top: 8px;
-    font-size: 17px;
-    text-align: center;
+    font-size: 14px;
+    font-family: var(--font);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
 }
+input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(6,182,212,0.15);
+}
+
 .search-container button {
-  padding: 6px 10px;
-  margin-top: 8px;
-  background: #ddd;
-  font-size: 17px;
-  border: none;
-  cursor: pointer;
+    padding: 7px 14px;
+    margin-top: 8px;
+    background: var(--purple);
+    color: #fff;
+    font-size: 14px;
+    font-family: var(--font);
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--transition);
 }
+.search-container button:hover { background: var(--purple-h); }
+
 @media screen and (max-width: 700px) {
-  .container,
-  .navbar {
-    flex-direction: column;
-  }
+    .container, .navbar { flex-direction: column; }
 }

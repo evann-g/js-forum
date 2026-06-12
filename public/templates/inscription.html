@@ -3,28 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/inscription.css">
-    <title>inscription</title>
+    <link rel="stylesheet" href="/css/inscription.css">
+    <title>Inscription — Mon Forum</title>
 </head>
 <body>
     <div class="nomsite">
         <h1>Mon forum</h1>
     </div>
-    <form action="/inscription" method="POST">
-        <h1>Inscription</h1>
-        <label for="username">Username:</label>
-        <input type="username" id="username" name="username" required="">
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required="">
-        <br>
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" name="password" required="">
-        <br>
-        <button type="submit">Se connecter</button>
-        <br>
-        <br>
-        <a href="/login">Vous avez déjà un compte ? connecter-vous</a>
-    </form>
+    <div class="page-center">
+        <form action="/api/auth/inscription" method="POST" id="inscriptionForm">
+            <h1>Inscription</h1>
+            <div class="field">
+                <label for="username">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur">
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Votre adresse email">
+            </div>
+            <div class="field">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+            </div>
+            <div class="field">
+                <label for="confirmPassword">Confirmer le mot de passe</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirmez votre mot de passe">
+            </div>
+            <p id="error-msg"></p>
+            <button type="submit">Créer mon compte</button>
+            <a href="/login">Déjà un compte ? Connectez-vous</a>
+        </form>
+    </div>
+    <script>
+    document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: e.target.username.value,
+            email: e.target.email.value,
+            password: e.target.password.value,
+        })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+        document.getElementById('error-msg').textContent = data.error;
+        } else {
+        window.location.href = '/'; // redirection après login
+        }
+    });
+    </script>
 </body>
 </html>
