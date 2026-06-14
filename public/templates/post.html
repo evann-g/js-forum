@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forum</title>
+    <link rel="stylesheet" href="../css/forum.css" />
+</head>
+<body>
+    
+    <div class="navbar">
+        <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">&#9776;</button>
+        <div class="navbar-actions">
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">dark</button>
+            <button class="btn btn-outline" id="profilBtn">  profil  </button>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Forum</div>
+    
+        <div class="search-bar">
+            <input type="text" placeholder="Search..." />
+        </div>
+    
+        <div class="sidenav">
+            <a href="forum.html">Home</a>
+            <a href="/post">Post</a>
+            <a href="#contact">Contact</a>
+            <button class="dropdown-btn" id="ddBtn">Dropdown
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container" id="ddContainer">
+                <a href="#">Link 1</a>
+                <a href="#">Link 2</a>
+                <a href="#">Link 3</a>
+            </div>
+            <!-- <a href="/login"> Sign In </a> -->
+        </div>
+    </div>
+
+    <div class="feed">
+        <div class="content-header">Créer un post</div>
+        <form class="post-form" id="postForm">
+            <select id="topicSelect" required></select>
+            <input type="text" id="titleInput" placeholder="Titre" required minlength="3" />
+            <textarea id="bodyInput" placeholder="Contenu" required minlength="10"></textarea>
+            <button type="submit" class="btn btn-outline">Publier</button>
+            <p id="formMessage"></p>
+        </form>
+
+        <div class="content-header">Tous les posts</div>
+        <div id="postsFeed"><p>Chargement...</p></div>
+    </div>
+
+    <script>
+        async function loadTopics() {
+            const select = document.getElementById('topicSelect');
+            try {
+                const res = await fetch('/api/categories');
+                const topics = await res.json();
+                select.innerHTML = topics.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+            } catch (err) {
+                select.innerHTML = '<option value="">Erreur chargement topics</option>';
+            }
+        }
+
+        async function loadPosts() {
+            const feed = document.getElementById('postsFeed');
+            try {
+                const res = await fetch('/api/posts');
+                const posts = await res.json();
+                if (!Array.isArray(posts) || posts.length === 0) {
+                    feed.innerHTML = '<p>Aucun post pour le moment.</p>';
+                    return;
+                }
+                feed.innerHTML = posts.map(p => `
+                    <div class="post-card">
+                        <h3>${p.title}</h3>
+                        <p class="post-meta">par ${p.username} — ${p.topic_title}</p>
+                        <p>${p.body}</p>
+                        ${p.image_url ? `<img src="${p.image_url}" alt="" />` : ''}
+                        <p class="post-meta">👍 ${p.likes} 👎 ${p.dislikes}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                feed.innerHTML = '<p>Erreur lors du chargement des posts.</p>';
+            }
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('formMessage');
+            const body = {
+                title: document.getElementById('titleInput').value,
+                body: document.getElementById('bodyInput').value,
+                topic_id: document.getElementById('topicSelect').value,
+                image_url: document.getElementById('imageInput').value || undefined,
+            };
+            try {
+                const res = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errMsg = data.errors ? data.errors.join(', ')
+                        : (data.error && data.error.message) ? data.error.message
+                        : (typeof data.error === 'string') ? data.error
+                        : 'Erreur inconnue';
+                    msg.textContent = errMsg;
+                    msg.style.color = 'red';
+                    return;
+                }
+                msg.textContent = 'Post publié !';
+                msg.style.color = 'green';
+                document.getElementById('postForm').reset();
+                loadPosts();
+            } catch (err) {
+                msg.textContent = 'Erreur réseau.';
+                msg.style.color = 'red';
+            }
+        });
+
+        loadTopics();
+        loadPosts();
+    </script>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const ddBtn = document.getElementById('ddBtn');
+        const ddContainer = document.getElementById('ddContainer');
+        const themeBtn = document.getElementById('themeBtn');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        ddBtn.addEventListener('click', () => {
+            ddBtn.classList.toggle('open');
+            ddContainer.classList.toggle('open');
+        });
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            themeBtn.textContent = 'light';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            themeBtn.textContent = isDark ? 'light' : 'dark';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        profilBtn.addEventListener('click', () => {
+            window.location.href = '/me';
+        });
+    </script>
+    
+</body>
+</html>

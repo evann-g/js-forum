@@ -25,8 +25,7 @@
     
         <div class="sidenav">
             <a href="forum.html">Home</a>
-            <a href="#services">Services</a>
-            <a href="#clients">Clients</a>
+            <a href="post.html">Post</a>
             <a href="#contact">Contact</a>
             <button class="dropdown-btn" id="ddBtn">Dropdown
                 <i class="fa fa-caret-down"></i>
@@ -42,8 +41,34 @@
 
     <div class="feed">
         <div class="content-header">Bienvenue sur le Forum</div>
-        <p>Ici vous trouverez le feed</p>
+        <div id="postsFeed"><p>Chargement...</p></div>
     </div>
+
+    <script>
+        async function loadPosts() {
+            const feed = document.getElementById('postsFeed');
+            try {
+                const res = await fetch('/api/posts');
+                const posts = await res.json();
+                if (!Array.isArray(posts) || posts.length === 0) {
+                    feed.innerHTML = '<p>Aucun post pour le moment.</p>';
+                    return;
+                }
+                feed.innerHTML = posts.map(p => `
+                    <div class="post-card">
+                        <h3>${p.title}</h3>
+                        <p class="post-meta">par ${p.username} — ${p.topic_title}</p>
+                        <p>${p.body}</p>
+                        ${p.image_url ? `<img src="${p.image_url}" alt="" />` : ''}
+                        <p class="post-meta">👍 ${p.likes} 👎 ${p.dislikes}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                feed.innerHTML = '<p>Erreur lors du chargement des posts.</p>';
+            }
+        }
+        loadPosts();
+    </script>
 
     <script>
         const sidebar = document.getElementById('sidebar');

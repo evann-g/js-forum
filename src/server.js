@@ -11,8 +11,7 @@ import { applyBodyParsing } from "./middleware/parseBody.js";
 import { applyLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import router from "./router/index.js";
-import { authentification, addUser, userExists } from "./services/auth.js";
-import { closeDb } from '../database/db.js';
+import session from 'express-session';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,55 +22,42 @@ const io = new SocketIOServer(httpServer, {
   cors: { origin: config.corsOrigin },
 });
 
-app.use(express.static(path.join(__dirname, '../public')));
+// Body parsing first
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+// Session
+if (config.nodeEnv === 'production' && !process.env.SESSION_SECRET) {
+  console.error('[FATAL] SESSION_SECRET environment variable is not set. Aborting.');
+  process.exit(1);
+}
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change_this_secret_in_production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: config.nodeEnv === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+  }
+}));
 
 applyBodyParsing(app);
 applyLogger(app);
 
+// API routes
 app.use("/api", router);
 
-// Page routes
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/forum.html"));
-});
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/login.html"));
-});
+// Static files (public folder) — don't auto-serve an index
+app.use(express.static(path.join(__dirname, '../public'), { index: false }));
 
-app.get("/inscription", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/templates/inscription.html"));
-});
-
-// Login handler
-app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
-    try {
-        const result = await authentification(username, password);
-        if (result.success) {
-            res.redirect("/");
-        } else {
-            res.redirect(`/login?error=${encodeURIComponent(result.message)}`);
-        }
-    } catch (err) {
-        res.redirect(`/login?error=${encodeURIComponent("Erreur serveur : " + err.message)}`);
-    }
-});
-
-// Registration handler
-app.post("/inscription", async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-        const exists = await userExists(username);
-        if (exists) {
-            res.redirect(`/inscription?error=${encodeURIComponent("Ce nom d'utilisateur est déjà pris !")}`);
-        } else {
-            await addUser(username, email, password);
-            res.redirect("/login?error=" + encodeURIComponent("Compte créé ! Vous pouvez vous connecter."));
-        }
-    } catch (err) {
-        res.redirect(`/inscription?error=${encodeURIComponent("Erreur serveur : " + err.message)}`);
-    }
-});
+// Page routes — redirect to static paths that express.static can serve directly
+app.get("/", (req, res) => res.redirect('/templates/forum.html'));
+app.get("/login", (req, res) => res.redirect('/templates/login.html'));
+app.get("/inscription", (req, res) => res.redirect('/templates/inscription.html'));
+app.get("/co", (req, res) => res.redirect('/templates/forum_co.html'));
+app.get("/me", (req, res) => res.redirect('/templates/profil.html'));
+app.get("/post", (req, res) => res.redirect('/templates/post.html'));
 
 app.use(errorHandler);
 
@@ -95,32 +81,27 @@ httpServer.listen(config.port, "0.0.0.0", () => {
 });
 
 process.on('SIGINT', () => {
-    console.log('\n[INFO] Arret du serveur. Nettoyage en cours...');
-
-    db.close((err) => {
-        if (err) {
-            console.log('[ERREUR] Fermeture DB:', err.message);
-        } else {
-            console.log('[OK] Base de donnees fermee.');
+  console.log('\n[INFO] Arret du serveur. Nettoyage en cours...');
+  db.close((err) => {
+    if (err) {
+      console.log('[ERREUR] Fermeture DB:', err.message);
+    } else {
+      console.log('[OK] Base de donnees fermee.');
+    }
+    const filesToDelete = [
+      path.join(__dirname, '../nodemon-debug.log'),
+    ];
+    for (const file of filesToDelete) {
+      try {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file);
+          console.log(`[OK] ${file} supprime.`);
         }
-
-        const filesToDelete = [
-            path.join(__dirname, '../database/forum.db'),
-            path.join(__dirname, '../nodemon-debug.log'),
-        ];
-
-        for (const file of filesToDelete) {
-            try {
-                if (fs.existsSync(file)) {
-                    fs.unlinkSync(file);
-                    console.log(`[OK] ${file} supprime.`);
-                }
-            } catch (e) {
-                console.log(`[ERREUR] ${file}: ${e.message}`);
-            }
-        }
-
-        console.log('[INFO] Nettoyage termine.');
-        process.exit(0);
-    });
+      } catch (e) {
+        console.log(`[ERREUR] ${file}: ${e.message}`);
+      }
+    }
+    console.log('[INFO] Nettoyage termine.');
+    process.exit(0);
+  });
 });

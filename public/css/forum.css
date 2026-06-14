@@ -282,3 +282,18 @@ body {
 
 /* ── Links ── */
 a { color: var(--link); }
+
+/* ── Posts feed ── */
+.post-card {
+    border: 1px solid var(--border, #ccc);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.post-card h3 { margin: 0 0 .5rem 0; }
+.post-card .post-meta { font-size: .85rem; opacity: .7; }
+.post-card img { max-width: 100%; border-radius: 4px; margin-top: .5rem; }
+.post-form { display: flex; flex-direction: column; gap: .75rem; max-width: 500px; }
+.post-form input, .post-form textarea, .post-form select {
+    padding: .5rem; border-radius: 4px; border: 1px solid var(--border, #ccc);
+}

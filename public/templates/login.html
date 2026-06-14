@@ -11,7 +11,7 @@
         <h1>Mon forum</h1>
     </div>
     <div class="page-center">
-        <form action="/login" method="POST">
+        <form id="login-form" action="/api/auth/login" method="POST">
             <h1>Connexion</h1>
             <div class="field">
                 <label for="username">Nom d'utilisateur</label>
@@ -27,14 +27,23 @@
         </form>
     </div>
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const error = params.get("error");
-        if (error) {
-            const msg = document.getElementById("error-msg");
-            msg.textContent = decodeURIComponent(error);
-            msg.style.display = "block";
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: e.target.username.value,
+            password: e.target.password.value,
+        })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+        document.getElementById('error-msg').textContent = data.error;
+        } else {
+        window.location.href = '/co'; // redirection après login
         }
-        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    });
     </script>
 </body>
 </html>
