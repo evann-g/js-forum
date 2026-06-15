@@ -1,83 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Forum</title>
-    <link rel="stylesheet" href="../css/forum.css" />
+    <title>Profil — Mon Forum</title>
+    <link rel="stylesheet" href="/css/forum.css" />
+    <link rel="stylesheet" href="/css/spa.css">
 </head>
 <body>
-    
-    <div class="navbar">
-        <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">&#9776;</button>
-        <h1 class="navbar-title"><script src="../../src/middleware/auth.js">nomUtilisateur()</script></h1>
-        <div class="navbar-actions">
-            <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">dark</button>
-            <button class="btn btn-outline" id="profilBtn">  profil  </button>
-        </div>
+
+<div class="navbar">
+    <button class="toggle-btn" id="toggleBtn">&#9776;</button>
+    <span class="navbar-brand" style="cursor:pointer" onclick="window.location.href='/'">Mon forum</span>
+    <div class="navbar-actions">
+        <button class="theme-btn" id="themeBtn">🌙</button>
+        <button class="btn btn-outline" onclick="window.location.href='/'">Retour au forum</button>
     </div>
+</div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">Forum</div>
-    
-        <div class="search-bar">
-            <input type="text" placeholder="Search..." />
-        </div>
-    
-        <div class="sidenav">
-            <a href="forum.html">Home</a>
-            <a href="/post">Post</a>
-            <a href="#contact">Contact</a>
-            <button class="dropdown-btn" id="ddBtn">Dropdown
-                <i class="fa fa-caret-down"></i>
-            </button>
-            <div class="dropdown-container" id="ddContainer">
-                <a href="#">Link 1</a>
-                <a href="#">Link 2</a>
-                <a href="#">Link 3</a>
-            </div>
-            <!-- <a href="/login"> Sign In </a> -->
-        </div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Mon compte</div>
+    <div class="sidenav">
+        <a href="/" >🏠 Accueil</a>
+        <a href="#mes-posts" class="active">📝 Mes posts</a>
+        <a href="#mes-likes">❤️ Posts aimés</a>
     </div>
+</div>
 
-    <div class="feed">
-        <div class="content-header">Bienvenue sur le Forum</div>
-        <p>Ici vous trouverez le feed</p>
-    </div>
+<div class="feed">
+    <div id="profile-content"><p style="color:var(--text-sec)">Chargement…</p></div>
+</div>
 
-    <script>
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleBtn');
-        const ddBtn = document.getElementById('ddBtn');
-        const ddContainer = document.getElementById('ddContainer');
-        const themeBtn = document.getElementById('themeBtn');
+<script>
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme() {
+    const dark = localStorage.getItem('theme') === 'dark';
+    document.body.classList.toggle('dark', dark);
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+}
+themeBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+});
+applyTheme();
+document.getElementById('toggleBtn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
 
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-        });
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function timeAgo(iso) {
+    const diff = (Date.now() - new Date(iso+(iso.endsWith('Z')?'':'Z')).getTime())/1000;
+    if (diff<60) return "à l'instant"; if (diff<3600) return Math.floor(diff/60)+' min';
+    if (diff<86400) return Math.floor(diff/3600)+' h'; return new Date(iso).toLocaleDateString('fr-FR');
+}
 
-        ddBtn.addEventListener('click', () => {
-            ddBtn.classList.toggle('open');
-            ddContainer.classList.toggle('open');
-        });
+async function init() {
+    const content = document.getElementById('profile-content');
+    let user;
+    try {
+        const me = await fetch('/api/auth/me').then(r=>r.json());
+        user = me.user;
+    } catch(_) {}
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark');
-            themeBtn.textContent = 'light';
-        }
+    if (!user) {
+        content.innerHTML = '<p style="color:var(--text-sec)">Vous n\'êtes pas connecté. <a href="/login">Se connecter</a></p>';
+        return;
+    }
 
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-            const isDark = document.body.classList.contains('dark');
-            themeBtn.textContent = isDark ? 'light' : 'dark';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
+    const [myPosts, likedPosts] = await Promise.all([
+        fetch(`/api/posts?user_id=${user.id}`).then(r=>r.json()).catch(()=>[]),
+        fetch(`/api/posts?liked_by=${user.id}`).then(r=>r.json()).catch(()=>[]),
+    ]);
 
-        profilBtn.addEventListener('click', () => {
-            window.location.href = '/me';
-        });
-    </script>
-    
+    const postCard = p => `
+        <div class="thread" onclick="window.location.href='/?post=${p.id}'" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 18px;margin-bottom:10px">
+            <h4>${esc(p.title)}</h4>
+            <div class="meta">${timeAgo(p.created_at)} · ▲ ${p.likes} ▼ ${p.dislikes}</div>
+        </div>
+    `;
+
+    content.innerHTML = `
+        <div class="profile-card">
+            <h2>👤 ${esc(user.username)}</h2>
+            <div class="meta">${esc(user.email||'')} · Membre depuis ${new Date(user.created_at).toLocaleDateString('fr-FR')}</div>
+            <button class="logout-btn" onclick="logout()">Se déconnecter</button>
+        </div>
+
+        <div id="mes-posts">
+            <div class="section-title">📝 Mes posts (${myPosts.length})</div>
+            ${myPosts.length ? myPosts.map(postCard).join('') : '<p style="color:var(--text-sec);font-size:14px">Aucun post pour l\'instant.</p>'}
+        </div>
+
+        <div id="mes-likes">
+            <div class="section-title">❤️ Posts aimés (${likedPosts.length})</div>
+            ${likedPosts.length ? likedPosts.map(postCard).join('') : '<p style="color:var(--text-sec);font-size:14px">Aucun post aimé.</p>'}
+        </div>
+    `;
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', {method:'POST'}).catch(()=>{});
+    window.location.href = '/login';
+}
+
+init();
+</script>
 </body>
 </html>

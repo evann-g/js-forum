@@ -1,0 +1,119 @@
+/* =============================================================
+   spa.css — Styles extracted from HTML <style> blocks
+   Sources: forum.html, profil.html, inscription.html, login.html
+   ============================================================= */
+
+
+/* ── forum.html ─────────────────────────────────────────────── */
+
+/* Post cards */
+.post-card { cursor: pointer; transition: border-color var(--transition), transform 0.1s; }
+.post-card:hover { border-left-color: var(--purple); transform: translateY(-1px); }
+.post-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
+.post-card .post-meta { font-size: 0.8rem; color: var(--text-sec); display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+.post-card .post-excerpt { color: var(--text-sec); font-size: 0.9rem; margin: 0.35rem 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* Tags */
+.tag-list { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.tag { background: rgba(124,58,237,0.15); color: var(--purple); font-size: 0.75rem; padding: 0.15rem 0.55rem; border-radius: 999px; cursor: pointer; font-weight: 500; border: 1px solid rgba(124,58,237,0.25); transition: background var(--transition); }
+.tag:hover { background: var(--purple); color: #fff; }
+
+/* Vote buttons */
+.vote-row { display: flex; align-items: center; gap: 0.5rem; }
+.vote-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-sec); cursor: pointer; padding: 0.2rem 0.5rem; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.25rem; transition: all var(--transition); font-family: var(--font); }
+.vote-btn:hover { border-color: var(--cyan); color: var(--text); }
+.vote-btn.voted-like { background: #22c55e; color: #fff; border-color: #22c55e; }
+.vote-btn.voted-dislike { background: #ef4444; color: #fff; border-color: #ef4444; }
+.vote-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+.filter-bar select { font-family: var(--font); font-size: 13px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); outline: none; cursor: pointer; }
+.filter-bar select:focus { border-color: var(--cyan); }
+.filter-tag { padding: 5px 12px; font-size: 13px; font-family: var(--font); border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text-sec); cursor: pointer; transition: all var(--transition); }
+.filter-tag.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+/* Empty state */
+.empty { color: var(--text-sec); text-align: center; padding: 2.5rem; font-size: 0.95rem; }
+
+/* Form fields */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0.9rem; }
+.field label { font-size: 13px; font-weight: 500; color: var(--text-sec); }
+.field input,
+.field textarea,
+.field select { font-family: var(--font); font-size: 14px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; transition: border-color var(--transition); }
+.field input:focus,
+.field textarea:focus,
+.field select:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
+.field textarea { resize: vertical; min-height: 110px; }
+.field select[multiple] { height: 110px; }
+.form-error { font-size: 13px; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 9px 13px; display: none; margin-bottom: 0.5rem; }
+
+/* Back link */
+.back-link { font-size: 13px; color: var(--text-sec); cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; background: none; border: none; font-family: var(--font); }
+.back-link:hover { color: var(--cyan); }
+
+/* Post detail view */
+.post-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+.post-detail h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+.post-detail .post-image { max-width: 100%; max-height: 380px; object-fit: contain; border-radius: 8px; margin: 1rem 0; border: 1px solid var(--border); }
+.post-body { color: var(--text); line-height: 1.75; white-space: pre-wrap; margin: 1rem 0; }
+.action-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+/* Comments */
+.comments-section { margin-top: 1.5rem; }
+.comments-section h3 { font-size: 0.95rem; color: var(--text-sec); margin-bottom: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.comment-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 0.6rem; }
+.comment-meta { font-size: 0.78rem; color: var(--text-sec); margin-bottom: 0.4rem; }
+.comment-body { color: var(--text); font-size: 0.92rem; white-space: pre-wrap; }
+.comment-actions { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
+.add-comment { margin-top: 1.25rem; }
+.add-comment textarea { width: 100%; font-family: var(--font); font-size: 14px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; resize: vertical; min-height: 90px; transition: border-color var(--transition); box-sizing: border-box; }
+.add-comment textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
+
+/* Inline edit */
+.inline-edit { display: none; }
+.inline-edit.active { display: block; margin-top: 0.5rem; }
+.inline-edit textarea { width: 100%; font-family: var(--font); font-size: 14px; padding: 8px 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); outline: none; resize: vertical; box-sizing: border-box; }
+.inline-edit textarea:focus { border-color: var(--cyan); }
+
+/* Toast notifications */
+#toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: 0.4rem; pointer-events: none; }
+.toast { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 1.1rem; font-size: 0.88rem; font-family: var(--font); color: var(--text); box-shadow: 0 4px 20px rgba(0,0,0,0.25); animation: slideIn 0.2s ease; pointer-events: auto; }
+.toast.toast-success { border-color: #22c55e; color: #22c55e; }
+.toast.toast-error { border-color: #ef4444; color: #ef4444; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+/* Utilities */
+.hidden  { display: none !important; }
+.spacer  { flex: 1; }
+
+
+/* ── profil.html ─────────────────────────────────────────────── */
+
+.profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; }
+.profile-card h2 { font-size: 1.2rem; margin-bottom: .25rem; }
+.profile-card .meta { font-size: 13px; color: var(--text-sec); margin-bottom: 1rem; }
+.section-title { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 .75rem; color: var(--text); }
+.thread { cursor: pointer; transition: border-color var(--transition); }
+.thread:hover { border-left-color: var(--purple); }
+.thread h4 { font-size: .95rem; margin-bottom: .2rem; }
+.thread .meta { font-size: .78rem; color: var(--text-sec); }
+.logout-btn { background: none; border: 1px solid #ef4444; color: #ef4444; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: var(--font); transition: all .2s; }
+.logout-btn:hover { background: #ef4444; color: #fff; }
+
+
+/* ── inscription.html & login.html (shared) ──────────────────── */
+
+.msg { font-size: 13px; border-radius: 8px; padding: 10px 14px; margin-top: 4px; display: none; }
+.msg.error   { color: #EF4444; background: #FEF2F2; border: 1px solid #FECACA; }
+.msg.success { color: #16a34a; background: #f0fdf4; border: 1px solid #bbf7d0; }
+
+body.dark .msg.error   { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3); }
+body.dark .msg.success { background: rgba(22,163,74,0.1);  border-color: rgba(22,163,74,0.3); }
+
+button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }

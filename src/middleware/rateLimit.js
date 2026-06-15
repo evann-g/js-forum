@@ -6,7 +6,6 @@ const store = new Map(); // key -> { count, resetAt }
  * @param {number} options.max        Max requests per window (default: 100)
  * @param {string} options.message    Error message
  */
-
 export function createRateLimit({ windowMs = 15 * 60 * 1000, max = 100, message = 'Too many requests' } = {}) {
     return (req, res, next) => {
         const key = req.ip;
@@ -27,5 +26,5 @@ export function createRateLimit({ windowMs = 15 * 60 * 1000, max = 100, message 
     };
 }
 
-export const authLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many auth attempts' });
-export const apiLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
+export const authLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 200, message: 'Trop de tentatives, réessayez plus tard.' });
+export const apiLimiter = createRateLimit({ windowMs: 15 * 60 * 1000, max: 300 });

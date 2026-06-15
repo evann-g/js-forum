@@ -1,12 +1,12 @@
 import db from '../../database/db.js';
-import {getSession} from '../repository/session.js';
-import {parseCookies} from '../utils/cookie.js';
+import { getSession } from '../repository/session.js';
+import { parseCookies } from '../utils/cookie.js';
 
 export async function requireAuth(req, res, next) {
     try {
         const cookies = parseCookies(req.headers.cookie || '');
         const sessionid = cookies['session_id'];
-        
+
         if (!sessionid) {
             return res.status(401).json({ error: 'Authentification requise' });
         }
@@ -20,6 +20,20 @@ export async function requireAuth(req, res, next) {
     } catch (err) {
         next(err);
     }
+}
+
+// Attach user to req if a valid session exists — runs on every request, non-blocking.
+// Used so that public routes (e.g. GET /api/auth/me) can still return user info.
+export async function attachUser(req, res, next) {
+    try {
+        const cookies = parseCookies(req.headers.cookie || '');
+        const sessionId = cookies['session_id'];
+        if (sessionId) {
+            const session = await getSession(sessionId);
+            if (session) req.user = { ...session, id: session.user_id };
+        }
+    } catch (_) { /* ignore — auth failure is non-fatal here */ }
+    next();
 }
 
 // NOTE: This middleware is currently unused in the router. If you ever use it,

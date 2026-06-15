@@ -4,46 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/spa.css">
     <title>Connexion — Mon Forum</title>
 </head>
 <body>
-    <div class="nomsite">
-        <h1>Mon forum</h1>
-    </div>
+    <div class="nomsite"><h1>Mon forum</h1></div>
     <div class="page-center">
-        <form id="login-form" action="/api/auth/login" method="POST">
+        <form id="login-form">
             <h1>Connexion</h1>
             <div class="field">
                 <label for="username">Nom d'utilisateur</label>
-                <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur">
+                <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur" autocomplete="username">
             </div>
             <div class="field">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+                <input type="password" id="password" name="password" required placeholder="Votre mot de passe" autocomplete="current-password">
             </div>
-            <p id="error-msg"></p>
-            <button type="submit">Se connecter</button>
+            <div class="msg" id="msg"></div>
+            <button type="submit" id="submitBtn">Se connecter</button>
             <a href="/inscription">Pas encore de compte ? Inscrivez-vous</a>
         </form>
     </div>
     <script>
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    function showError(text) {
+        const el = document.getElementById('msg');
+        el.textContent = text;
+        el.className = 'msg error';
+        el.style.display = 'block';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            username: e.target.username.value,
-            password: e.target.password.value,
-        })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-        document.getElementById('error-msg').textContent = data.error;
-        } else {
-        window.location.href = '/co'; // redirection après login
+        const btn = document.getElementById('submitBtn');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) { showError('Veuillez remplir tous les champs.'); return; }
+
+        btn.disabled = true;
+        btn.textContent = 'Connexion…';
+        document.getElementById('msg').style.display = 'none';
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                showError(data.error || 'Identifiants incorrects.');
+                btn.disabled = false;
+                btn.textContent = 'Se connecter';
+            } else {
+                window.location.href = '/';
+            }
+        } catch (err) {
+            showError('Erreur réseau — vérifiez que le serveur tourne.');
+            btn.disabled = false;
+            btn.textContent = 'Se connecter';
         }
     });
+
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
     </script>
 </body>
 </html>

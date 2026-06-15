@@ -1,5 +1,7 @@
 import db from '../../database/db.js';
 
+// ─── Post votes ────────────────────────────────────────────────────────────────
+
 export function getPostVote(user_id, post_id) {
     return new Promise((resolve, reject) => {
         db.get("SELECT vote FROM post_votes WHERE user_id = ? AND post_id = ?",
@@ -15,9 +17,7 @@ export function upsertPostVote(user_id, post_id, vote) {
             `INSERT INTO post_votes (user_id, post_id, vote) VALUES (?, ?, ?)
              ON CONFLICT(user_id, post_id) DO UPDATE SET vote = excluded.vote`,
             [user_id, post_id, vote],
-            (err) => {
-                if (err) reject(err); else resolve();
-            }
+            (err) => { if (err) reject(err); else resolve(); }
         );
     });
 }
@@ -26,11 +26,7 @@ export function deletePostVote(user_id, post_id) {
     return new Promise((resolve, reject) => {
         db.run("DELETE FROM post_votes WHERE user_id = ? AND post_id = ?",
             [user_id, post_id], (err) => {
-                if (err) {
-                    reject(err);
-                }  else{
-                    resolve();
-                }
+                if (err) reject(err); else resolve();
             });
     });
 }
@@ -48,11 +44,25 @@ export function recalcPostVotes(post_id) {
     });
 }
 
-// ---- Comments ----
+export function getPostVoteCounts(post_id) {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT likes, dislikes FROM posts WHERE id = ?", [post_id],
+            (err, row) => {
+                if (err) reject(err);
+                else resolve(row || { likes: 0, dislikes: 0 });
+            }
+        );
+    });
+}
+
+// ─── Comment votes ─────────────────────────────────────────────────────────────
+
 export function getCommentVote(user_id, comment_id) {
     return new Promise((resolve, reject) => {
         db.get("SELECT vote FROM comment_votes WHERE user_id = ? AND comment_id = ?",
-            [user_id, comment_id], (err, row) => { if (err) reject(err); else resolve(row?.vote ?? 0); });
+            [user_id, comment_id], (err, row) => {
+                if (err) reject(err); else resolve(row?.vote ?? 0);
+            });
     });
 }
 
@@ -70,7 +80,9 @@ export function upsertCommentVote(user_id, comment_id, vote) {
 export function deleteCommentVote(user_id, comment_id) {
     return new Promise((resolve, reject) => {
         db.run("DELETE FROM comment_votes WHERE user_id = ? AND comment_id = ?",
-            [user_id, comment_id], (err) => { if (err) reject(err); else resolve(); });
+            [user_id, comment_id], (err) => {
+                if (err) reject(err); else resolve();
+            });
     });
 }
 
@@ -83,6 +95,17 @@ export function recalcCommentVotes(comment_id) {
              WHERE id = ?`,
             [comment_id, comment_id, comment_id],
             (err) => { if (err) reject(err); else resolve(); }
+        );
+    });
+}
+
+export function getCommentVoteCounts(comment_id) {
+    return new Promise((resolve, reject) => {
+        db.get("SELECT likes, dislikes FROM comments WHERE id = ?", [comment_id],
+            (err, row) => {
+                if (err) reject(err);
+                else resolve(row || { likes: 0, dislikes: 0 });
+            }
         );
     });
 }
