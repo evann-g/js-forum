@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forum</title>
+    <link rel="stylesheet" href="/css/forum.css" />
+    <link rel="stylesheet" href="/css/spa.css">
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<div class="navbar">
+    <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">&#9776;</button>
+    <span class="navbar-brand" style="cursor:pointer" onclick="showView('home')">Mon forum</span>
+    <div class="navbar-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+        <div id="nav-auth"><!-- filled by JS --></div>
+    </div>
+</div>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Navigation</div>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Rechercher…" oninput="handleSearch(this.value)"/>
+    </div>
+    <div class="sidenav" id="sidenav">
+        <a href="#" id="nav-home" class="active" onclick="filterBy(null,'home');return false">🏠 Accueil</a>
+        <a href="#" id="nav-mine" class="hidden" onclick="filterBy('mine');return false">📝 Mes posts</a>
+        <a href="#" id="nav-liked" class="hidden" onclick="filterBy('liked');return false">❤️ Mes likes</a>
+        <a href="#" onclick="showNewPost();return false">✏️ Nouveau post</a>
+        <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+        <div style="padding:9px 20px;font-size:12px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.06em">Catégories</div>
+        <div id="sidebar-cats"><!-- filled by JS --></div>
+    </div>
+</div>
+
+<!-- ── Feed ── -->
+<div class="feed" id="feed">
+    <div id="view-home">
+        <div class="content-header" id="feed-title">Bienvenue sur le Forum</div>
+        <div class="filter-bar" id="filter-bar">
+            <select id="sort-select" onchange="loadPosts()">
+                <option value="">Plus récents</option>
+                <option value="likes">Plus aimés</option>
+            </select>
+            <button class="filter-tag" id="btn-mine" onclick="toggleMine()" style="display:none">Mes posts</button>
+            <button class="filter-tag" id="btn-liked" onclick="toggleLiked()" style="display:none">Mes likes</button>
+        </div>
+        <div id="postsFeed"><p style="color:var(--text-sec)">Chargement…</p></div>
+    </div>
+    <div id="view-post" class="hidden"></div>
+    <div id="view-newpost" class="hidden">
+        <button class="back-link" onclick="showView('home')">← Retour</button>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem">
+            <h2 class="content-header">Créer un post</h2>
+            <div class="field">
+                <label>Titre *</label>
+                <input type="text" id="np-title" placeholder="Titre du post">
+            </div>
+            <div class="field">
+                <label>Contenu *</label>
+                <textarea id="np-body" placeholder="Votre message…"></textarea>
+            </div>
+            <div class="field">
+                <label>Image (optionnel, max 20 Mo)</label>
+                <input type="file" id="np-image" accept="image/*" style="padding:6px 0;background:none;border:none">
+            </div>
+            <div class="field">
+                <label>Catégories (Ctrl/Cmd pour plusieurs)</label>
+                <select id="np-cats" multiple></select>
+            </div>
+            <div class="form-error" id="np-error"></div>
+            <button class="btn btn-primary" onclick="submitNewPost()">Publier</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script>
+/* ======================================================
+   STATE
+====================================================== */
+let currentUser = null;
+let allCategories = [];
+let currentFilter = { category: null, mine: false, liked: false };
+let searchTimeout = null;
+
+/* ======================================================
+   HELPERS
+====================================================== */
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function timeAgo(iso) {
+    const diff = (Date.now() - new Date(iso + (iso.endsWith('Z') ? '' : 'Z')).getTime()) / 1000;
+    if (diff < 60) return "à l'instant";
+    if (diff < 3600) return Math.floor(diff/60) + ' min';
+    if (diff < 86400) return Math.floor(diff/3600) + ' h';
+    if (diff < 604800) return Math.floor(diff/86400) + ' j';
+    return new Date(iso).toLocaleDateString('fr-FR');
+}
+
+async function apiFetch(method, url, body, isForm) {
+    const opts = { method, credentials: 'same-origin' };
+    if (body && !isForm) { opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
+    else if (body && isForm) { opts.body = body; }
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || (data.errors && data.errors.join(' ')) || `HTTP ${res.status}`);
+    return data;
+}
+
+function toast(msg, type='info') {
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.textContent = msg;
+    document.getElementById('toast').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+/* ======================================================
+   THEME
+====================================================== */
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme() {
+    const dark = localStorage.getItem('theme') === 'dark';
+    document.body.classList.toggle('dark', dark);
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+}
+themeBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+});
+applyTheme();
+
+/* ======================================================
+   SIDEBAR TOGGLE
+====================================================== */
+document.getElementById('toggleBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+/* ======================================================
+   VIEWS
+====================================================== */
+function showView(name) {
+    document.getElementById('view-home').classList.toggle('hidden', name !== 'home');
+    document.getElementById('view-post').classList.toggle('hidden', name !== 'post');
+    document.getElementById('view-newpost').classList.toggle('hidden', name !== 'newpost');
+    if (name === 'home') loadPosts();
+    // Clear the ?post= param when navigating back to home
+    if (name === 'home' && window.history.replaceState) {
+        window.history.replaceState({}, '', '/');
+    }
+}
+
+function showNewPost() {
+    if (!currentUser) { window.location.href = '/login'; return; }
+    fillCategorySelect('np-cats');
+    showView('newpost');
+}
+
+/* ======================================================
+   NAV / AUTH
+====================================================== */
+function updateNav() {
+    const nav = document.getElementById('nav-auth');
+    if (currentUser) {
+        nav.innerHTML = `
+            <span style="font-size:13px;color:var(--text-sec);margin-right:4px">👤 ${esc(currentUser.username)}</span>
+            <button class="btn btn-outline" onclick="window.location.href='/me'">Profil</button>
+            <button class="btn btn-primary" style="margin-left:4px" onclick="doLogout()">Déconnexion</button>
+        `;
+        document.getElementById('nav-mine').classList.remove('hidden');
+        document.getElementById('nav-liked').classList.remove('hidden');
+        document.getElementById('btn-mine').style.display = '';
+        document.getElementById('btn-liked').style.display = '';
+    } else {
+        nav.innerHTML = `
+            <button class="btn btn-outline" onclick="window.location.href='/login'">Connexion</button>
+            <button class="btn btn-primary" style="margin-left:4px" onclick="window.location.href='/inscription'">S'inscrire</button>
+        `;
+        document.getElementById('nav-mine').classList.add('hidden');
+        document.getElementById('nav-liked').classList.add('hidden');
+        document.getElementById('btn-mine').style.display = 'none';
+        document.getElementById('btn-liked').style.display = 'none';
+    }
+}
+
+async function doLogout() {
+    await apiFetch('POST', '/api/auth/logout').catch(() => {});
+    currentUser = null;
+    updateNav();
+    currentFilter = { category: null, mine: false, liked: false };
+    loadPosts();
+    toast('Déconnecté');
+}
+
+/* ======================================================
+   CATEGORIES SIDEBAR
+====================================================== */
+function buildSidebarCats() {
+    const el = document.getElementById('sidebar-cats');
+    el.innerHTML = allCategories.map(c =>
+        `<a href="#" onclick="filterByCategory(${c.id},'${esc(c.title)}');return false">${esc(c.title)}</a>`
+    ).join('');
+}
+
+function fillCategorySelect(id) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = allCategories.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('');
+}
+
+/* ======================================================
+   FILTERS
+====================================================== */
+function filterByCategory(id, name) {
+    currentFilter = { category: id, mine: false, liked: false };
+    document.getElementById('feed-title').textContent = '# ' + name;
+    updateActiveNav('none');
+    loadPosts();
+    showView('home');
+}
+
+function filterBy(type) {
+    if (type === 'mine') {
+        if (!currentUser) { window.location.href='/login'; return; }
+        currentFilter = { category: null, mine: true, liked: false };
+        document.getElementById('feed-title').textContent = 'Mes posts';
+        updateActiveNav('mine');
+    } else if (type === 'liked') {
+        if (!currentUser) { window.location.href='/login'; return; }
+        currentFilter = { category: null, mine: false, liked: true };
+        document.getElementById('feed-title').textContent = 'Posts aimés';
+        updateActiveNav('liked');
+    } else {
+        currentFilter = { category: null, mine: false, liked: false };
+        document.getElementById('feed-title').textContent = 'Bienvenue sur le Forum';
+        updateActiveNav('home');
+    }
+    document.getElementById('btn-mine').classList.toggle('active', currentFilter.mine);
+    document.getElementById('btn-liked').classList.toggle('active', currentFilter.liked);
+    loadPosts();
+    showView('home');
+}
+
+function toggleMine() { filterBy(currentFilter.mine ? null : 'mine'); }
+function toggleLiked() { filterBy(currentFilter.liked ? null : 'liked'); }
+
+function updateActiveNav(active) {
+    document.getElementById('nav-home').classList.toggle('active', active === 'home');
+    document.getElementById('nav-mine').classList.toggle('active', active === 'mine');
+    document.getElementById('nav-liked').classList.toggle('active', active === 'liked');
+}
+
+function handleSearch(val) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadPosts(val), 300);
+}
+
+/* ======================================================
+   POSTS LIST
+====================================================== */
+async function loadPosts(search = '') {
+    const feed = document.getElementById('postsFeed');
+    feed.innerHTML = '<p style="color:var(--text-sec)">Chargement…</p>';
+
+    const params = new URLSearchParams();
+    if (currentFilter.category) params.set('topic_id', currentFilter.category);
+    if (currentFilter.mine && currentUser) params.set('user_id', currentUser.id);
+    if (currentFilter.liked && currentUser) params.set('liked_by', currentUser.id);
+    const sort = document.getElementById('sort-select').value;
+    if (sort) params.set('sort', sort);
+
+    try {
+        let posts = await apiFetch('GET', '/api/posts?' + params);
+        if (search) {
+            const q = search.toLowerCase();
+            posts = posts.filter(p => p.title.toLowerCase().includes(q) || (p.body||'').toLowerCase().includes(q));
+        }
+        if (!posts.length) { feed.innerHTML = '<div class="empty">Aucun post trouvé.</div>'; return; }
+
+        feed.innerHTML = posts.map(p => {
+            const cats = (p.categories||[]).map(c =>
+                `<span class="tag" onclick="filterByCategory(${c.id},'${esc(c.title)}');event.stopPropagation()">${esc(c.title)}</span>`
+            ).join('');
+            return `
+                <div class="thread post-card" onclick="loadPost(${p.id})">
+                    <h3>${esc(p.title)}</h3>
+                    <div class="post-meta">
+                        <span>par <strong>${esc(p.username)}</strong></span>
+                        <span>${timeAgo(p.created_at)}</span>
+                        <span style="color:#22c55e">▲ ${p.likes}</span>
+                        <span style="color:#ef4444">▼ ${p.dislikes}</span>
+                    </div>
+                    <div class="post-excerpt">${esc(p.body)}</div>
+                    <div class="tag-list">${cats}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        feed.innerHTML = `<div class="empty">Erreur : ${esc(err.message)}</div>`;
+    }
+}
+
+/* ======================================================
+   POST DETAIL
+====================================================== */
+async function loadPost(id) {
+    const view = document.getElementById('view-post');
+    view.innerHTML = '<p style="color:var(--text-sec);padding:1rem">Chargement…</p>';
+    showView('post');
+
+    // Update URL without a full navigation so back/refresh works
+    if (window.history.replaceState) {
+        window.history.replaceState({}, '', '/?post=' + id);
+    }
+
+    try {
+        const post = await apiFetch('GET', `/api/posts/${id}`);
+        const comments = await apiFetch('GET', `/api/posts/${id}/comments`);
+
+        const isOwner = currentUser && currentUser.id === post.user_id;
+        const cats = (post.categories||[]).map(c =>
+            `<span class="tag" onclick="filterByCategory(${c.id},'${esc(c.title)}')">${esc(c.title)}</span>`
+        ).join('');
+
+        let html = `
+            <button class="back-link" onclick="showView('home')">← Retour</button>
+            <div class="post-detail">
+                <h1>${esc(post.title)}</h1>
+                <div class="post-meta">
+                    <span>par <strong>${esc(post.username)}</strong></span>
+                    <span>${timeAgo(post.created_at)}</span>
+                    ${post.updated_at && post.updated_at !== post.created_at ? '<span>(modifié)</span>' : ''}
+                </div>
+                <div class="tag-list" style="margin-top:.5rem">${cats}</div>
+                ${post.image_url ? `<img class="post-image" src="${esc(post.image_url)}" alt="Image du post">` : ''}
+                <div class="post-body">${esc(post.body)}</div>
+                <div class="action-row">
+                    <div class="vote-row">
+                        <button class="vote-btn" id="like-post-btn" onclick="votePost(${post.id},1)" ${!currentUser?'disabled':''}>▲ <span id="like-post-count">${post.likes}</span></button>
+                        <button class="vote-btn" id="dislike-post-btn" onclick="votePost(${post.id},-1)" ${!currentUser?'disabled':''}>▼ <span id="dislike-post-count">${post.dislikes}</span></button>
+                    </div>
+                    <span class="spacer"></span>
+                    ${isOwner ? `
+                        <button class="btn btn-outline" style="font-size:13px" onclick="toggleEditPost(${post.id})">✏ Modifier</button>
+                        <button class="btn btn-outline" style="font-size:13px;color:#ef4444;border-color:#ef4444" onclick="deletePost(${post.id})">🗑 Supprimer</button>
+                    ` : ''}
+                </div>
+                <!-- Edit form -->
+                <div class="inline-edit" id="edit-post-form">
+                    <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+                    <h3 style="font-size:1rem;margin-bottom:.75rem">Modifier le post</h3>
+                    <div class="field"><label>Titre</label><input id="ep-title" value="${esc(post.title)}"></div>
+                    <div class="field"><label>Contenu</label><textarea id="ep-body">${esc(post.body)}</textarea></div>
+                    <div class="field"><label>Image (remplace l'actuelle)</label><input type="file" id="ep-image" accept="image/*" style="padding:6px 0;background:none;border:none"></div>
+                    <div class="field"><label>Catégories</label><select id="ep-cats" multiple></select></div>
+                    <div class="form-error" id="ep-error"></div>
+                    <div style="display:flex;gap:.5rem">
+                        <button class="btn btn-primary" onclick="submitEditPost(${post.id})">Enregistrer</button>
+                        <button class="btn btn-outline" onclick="toggleEditPost(${post.id})">Annuler</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <h3>💬 ${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</h3>
+        `;
+
+        for (const c of comments) {
+            const isCOwner = currentUser && currentUser.id === c.user_id;
+            html += `
+                <div class="comment-card" id="comment-${c.id}">
+                    <div class="comment-meta">${esc(c.username)} · ${timeAgo(c.created_at)}${c.updated_at && c.updated_at !== c.created_at ? ' (modifié)' : ''}</div>
+                    <div class="comment-body" id="cbody-${c.id}">${esc(c.body)}</div>
+                    <div class="inline-edit" id="cedit-${c.id}">
+                        <textarea id="cedit-text-${c.id}">${esc(c.body)}</textarea>
+                        <div style="display:flex;gap:.4rem;margin-top:.35rem">
+                            <button class="btn btn-primary" style="font-size:13px" onclick="submitEditComment(${c.id},${id})">Sauvegarder</button>
+                            <button class="btn btn-outline" style="font-size:13px" onclick="toggleEditComment(${c.id})">Annuler</button>
+                        </div>
+                    </div>
+                    <div class="comment-actions">
+                        <div class="vote-row">
+                            <button class="vote-btn" id="lc-${c.id}" onclick="voteComment(${c.id},1)" ${!currentUser?'disabled':''}>▲ <span id="lc-count-${c.id}">${c.likes}</span></button>
+                            <button class="vote-btn" id="dc-${c.id}" onclick="voteComment(${c.id},-1)" ${!currentUser?'disabled':''}>▼ <span id="dc-count-${c.id}">${c.dislikes}</span></button>
+                        </div>
+                        ${isCOwner ? `
+                            <button class="btn btn-outline" style="font-size:12px;padding:4px 9px" onclick="toggleEditComment(${c.id})">✏</button>
+                            <button class="btn btn-outline" style="font-size:12px;padding:4px 9px;color:#ef4444;border-color:#ef4444" onclick="deleteComment(${c.id},${id})">🗑</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (currentUser) {
+            html += `
+                <div class="add-comment">
+                    <textarea id="new-comment" placeholder="Écrire un commentaire…"></textarea>
+                    <div class="form-error" id="comment-error"></div>
+                    <button class="btn btn-primary" style="margin-top:.5rem" onclick="submitComment(${id})">Envoyer</button>
+                </div>
+            `;
+        } else {
+            html += `<p style="color:var(--text-sec);margin-top:1rem;font-size:14px"><a href="/login">Connectez-vous</a> pour commenter.</p>`;
+        }
+
+        html += `</div>`;
+        view.innerHTML = html;
+
+        fillCategorySelect('ep-cats');
+        const epCats = document.getElementById('ep-cats');
+        const postCatIds = (post.categories||[]).map(c=>c.id);
+        for (const opt of epCats.options) if (postCatIds.includes(Number(opt.value))) opt.selected = true;
+
+    } catch (err) {
+        view.innerHTML = `<div class="empty">Erreur : ${esc(err.message)}</div>`;
+    }
+}
+
+/* ======================================================
+   VOTES
+====================================================== */
+async function votePost(postId, value) {
+    if (!currentUser) { window.location.href='/login'; return; }
+    try {
+        const data = await apiFetch('POST', `/api/posts/${postId}/${value===1?'like':'dislike'}`);
+        document.getElementById('like-post-count').textContent = data.likes;
+        document.getElementById('dislike-post-count').textContent = data.dislikes;
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function voteComment(commentId, value) {
+    if (!currentUser) { window.location.href='/login'; return; }
+    try {
+        const data = await apiFetch('POST', `/api/comments/${commentId}/${value===1?'like':'dislike'}`);
+        document.getElementById(`lc-count-${commentId}`).textContent = data.likes;
+        document.getElementById(`dc-count-${commentId}`).textContent = data.dislikes;
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ======================================================
+   CREATE POST
+====================================================== */
+async function submitNewPost() {
+    const title = document.getElementById('np-title').value.trim();
+    const body = document.getElementById('np-body').value.trim();
+    const imageFile = document.getElementById('np-image').files[0];
+    const catSel = document.getElementById('np-cats');
+    const catIds = Array.from(catSel.selectedOptions).map(o => o.value);
+    const errEl = document.getElementById('np-error');
+    errEl.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('body', body);
+    catIds.forEach(c => fd.append('category_ids', c));
+    if (imageFile) fd.append('image', imageFile);
+
+    try {
+        const post = await apiFetch('POST', '/api/posts', fd, true);
+        toast('Post publié !', 'success');
+        document.getElementById('np-title').value = '';
+        document.getElementById('np-body').value = '';
+        document.getElementById('np-image').value = '';
+        catSel.selectedIndex = -1;
+        loadPost(post.id);
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+    }
+}
+
+/* ======================================================
+   EDIT / DELETE POST
+====================================================== */
+function toggleEditPost() {
+    document.getElementById('edit-post-form').classList.toggle('active');
+}
+
+async function submitEditPost(id) {
+    const title = document.getElementById('ep-title').value.trim();
+    const body = document.getElementById('ep-body').value.trim();
+    const imageFile = document.getElementById('ep-image').files[0];
+    const catSel = document.getElementById('ep-cats');
+    const catIds = Array.from(catSel.selectedOptions).map(o => o.value);
+    const errEl = document.getElementById('ep-error');
+    errEl.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('title', title);
+    fd.append('body', body);
+    catIds.forEach(c => fd.append('category_ids', c));
+    if (imageFile) fd.append('image', imageFile);
+
+    try {
+        await apiFetch('PUT', `/api/posts/${id}`, fd, true);
+        toast('Post modifié !', 'success');
+        loadPost(id);
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+    }
+}
+
+async function deletePost(id) {
+    if (!confirm('Supprimer ce post ?')) return;
+    try {
+        await apiFetch('DELETE', `/api/posts/${id}`);
+        toast('Post supprimé');
+        showView('home');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ======================================================
+   COMMENTS
+====================================================== */
+async function submitComment(postId) {
+    const body = document.getElementById('new-comment').value.trim();
+    const errEl = document.getElementById('comment-error');
+    errEl.style.display = 'none';
+    if (!body) { errEl.textContent = 'Le commentaire ne peut pas être vide.'; errEl.style.display='block'; return; }
+    try {
+        await apiFetch('POST', `/api/posts/${postId}/comments`, { body });
+        toast('Commentaire ajouté !', 'success');
+        loadPost(postId);
+    } catch (err) { errEl.textContent = err.message; errEl.style.display='block'; }
+}
+
+function toggleEditComment(id) {
+    document.getElementById(`cedit-${id}`).classList.toggle('active');
+    document.getElementById(`cbody-${id}`).classList.toggle('hidden');
+}
+
+async function submitEditComment(id, postId) {
+    const body = document.getElementById(`cedit-text-${id}`).value.trim();
+    if (!body) return;
+    try {
+        await apiFetch('PUT', `/api/comments/${id}`, { body });
+        toast('Commentaire modifié !', 'success');
+        loadPost(postId);
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteComment(id, postId) {
+    if (!confirm('Supprimer ce commentaire ?')) return;
+    try {
+        await apiFetch('DELETE', `/api/comments/${id}`);
+        document.getElementById(`comment-${id}`)?.remove();
+        toast('Commentaire supprimé');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ======================================================
+   INIT
+====================================================== */
+async function init() {
+    try {
+        const me = await apiFetch('GET', '/api/auth/me');
+        currentUser = me.user || null;
+    } catch (_) { currentUser = null; }
+
+    try {
+        allCategories = await apiFetch('GET', '/api/categories');
+    } catch (_) { allCategories = []; }
+
+    buildSidebarCats();
+    updateNav();
+
+    // Check for a ?post=ID param — e.g. when linking from the profile page
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('post');
+    if (postId) {
+        loadPost(Number(postId));
+    } else {
+        loadPosts();
+    }
+}
+
+init();
+</script>
+</body>
+</html>

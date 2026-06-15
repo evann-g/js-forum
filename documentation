@@ -1,0 +1,268 @@
+# Documentation du Projet js-forum
+
+> Documentation technique à destination de l'équipe de développement.
+
+---
+
+## Table des matières
+
+1. [Structure du projet](#structure-du-projet)
+2. [Prérequis](#prérequis)
+3. [Installation](#installation)
+4. [Variables d'environnement](#variables-denvironnement)
+5. [Scripts disponibles](#scripts-disponibles)
+6. [Architecture](#architecture)
+7. [Dépendances](#dépendances)
+8. [Pipeline CI](#pipeline-ci)
+9. [Ce qui reste à faire](#ce-qui-reste-à-faire)
+
+---
+
+## Structure du projet
+
+```
+js-forum/
+├── .github/
+│   └── workflows/
+│       └── ci.yml          # Pipeline d'intégration continue
+├── database/
+│   ├── db.js               # Connexion à la base de données (pool MySQL)
+│   └── schema.sql          # Schéma de la base de données
+├── public/
+│   └── templates/          # Fichiers HTML statiques
+├── src/
+│   ├── config/
+│   │   └── config.js       # Centralisation des variables d'environnement
+│   ├── handlers/           # Gestionnaires de routes (à compléter)
+│   ├── middleware/
+│   │   ├── auth.js         # Middleware d'authentification (à compléter)
+│   │   ├── errorHandler.js # Gestion globale des erreurs
+│   │   ├── logger.js       # Logging des requêtes HTTP
+│   │   ├── parseBody.js    # Parsing du corps des requêtes
+│   │   └── rateLimit.js    # Limitation du taux de requêtes (à compléter)
+│   ├── models/             # Modèles de données (à compléter)
+│   ├── repository/         # Requêtes base de données (à compléter)
+│   ├── router/
+│   │   └── index.js        # Définition des routes
+│   ├── services/           # Logique métier (à compléter)
+│   ├── utils/              # Fonctions utilitaires (à compléter)
+│   └── server.js           # Point d'entrée de l'application
+├── tests/                  # Tests (à compléter)
+├── .env                    # Variables d'environnement (ne pas committer)
+├── .env.exemple            # Modèle de fichier .env (à committer)
+├── .eslintrc.json          # Configuration ESLint
+├── .gitignore              # Fichiers ignorés par git
+└── package.json            # Dépendances et scripts
+```
+
+---
+
+## Prérequis
+
+- **Node.js** v20 ou supérieur
+- **npm** v9 ou supérieur
+- **MySQL** 8.0 ou supérieur
+
+---
+
+## Installation
+
+1. Cloner le dépôt :
+
+```bash
+git clone https://github.com/evann-g/js-forum.git
+cd js-forum
+```
+
+2. Installer les dépendances :
+
+```bash
+npm install
+```
+
+3. Créer le fichier `.env` à partir du modèle :
+
+```bash
+cp .env.exemple .env
+```
+
+4. Remplir les variables d'environnement dans `.env` (voir section suivante).
+
+5. Créer la base de données et charger le schéma :
+
+```sql
+CREATE DATABASE js_forum;
+USE js_forum;
+SOURCE database/schema.sql;
+```
+
+6. Lancer le serveur en mode développement :
+
+```bash
+npm run dev
+```
+
+---
+
+## Variables d'environnement
+
+Le fichier `.env` doit contenir les variables suivantes :
+
+```env
+# Serveur
+PORT=8000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:8000
+
+# Base de données
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=ton_utilisateur
+DB_PASSWORD=ton_mot_de_passe
+DB_NAME=js_forum
+```
+
+> ⚠️ Ne jamais committer le fichier `.env` — il est listé dans `.gitignore`.
+> Les variables `DB_USER`, `DB_PASSWORD` et `DB_NAME` sont obligatoires.
+> Le serveur lancera une erreur au démarrage si elles sont absentes.
+
+---
+
+## Scripts disponibles
+
+| Commande | Description |
+|---|---|
+| `npm run dev` | Lance le serveur avec nodemon (redémarrage automatique) |
+| `npm start` | Lance le serveur en mode production |
+| `npm test` | Lance les tests |
+| `npm run lint` | Vérifie la qualité du code avec ESLint |
+
+---
+
+## Architecture
+
+### Point d'entrée — `src/server.js`
+
+C'est le fichier qui démarre l'application. Il :
+- Charge les variables d'environnement
+- Crée le serveur HTTP et Socket.IO
+- Applique les middlewares
+- Monte le router sur `/api`
+- Écoute sur le port défini dans `.env`
+
+### Configuration — `src/config/config.js`
+
+Centralise toutes les variables d'environnement. Tous les autres fichiers importent depuis ce fichier plutôt que de lire `process.env` directement.
+
+```js
+import { config } from "./config/config.js";
+console.log(config.port); // 8000
+```
+
+### Base de données — `database/db.js`
+
+Crée un **pool de connexions** MySQL via `mysql2/promise`. Un pool maintient plusieurs connexions ouvertes en parallèle pour gérer plusieurs requêtes simultanées.
+
+Pour utiliser la base de données dans un fichier :
+```js
+import pool from "../database/db.js";
+
+const [rows] = await pool.query("SELECT * FROM users");
+```
+
+> Les fichiers `src/repository/` sont les seuls qui doivent importer `db.js` directement.
+
+### Middlewares — `src/middleware/`
+
+| Fichier | Rôle |
+|---|---|
+| `parseBody.js` | Parse le JSON et les formulaires dans les requêtes entrantes |
+| `logger.js` | Affiche les logs des requêtes HTTP (mode `dev` en développement, `combined` en production) |
+| `errorHandler.js` | Intercepte toutes les erreurs et renvoie une réponse JSON propre. Inclut la stack trace uniquement en développement |
+| `auth.js` | À compléter — vérifiera les sessions utilisateur |
+| `rateLimit.js` | À compléter — limitera le nombre de requêtes par IP |
+
+### Router — `src/router/index.js`
+
+Toutes les routes de l'API sont définies ici et montées sur `/api` dans `server.js`. Pour ajouter de nouvelles routes :
+
+```js
+import { authRouter } from "../handlers/auth.js";
+router.use("/auth", authRouter);
+```
+
+### Flux d'une requête
+
+```
+Requête HTTP
+    ↓
+server.js
+    ↓
+Middlewares (logger → parseBody → auth)
+    ↓
+router/index.js
+    ↓
+handlers/
+    ↓
+services/
+    ↓
+repository/
+    ↓
+database/db.js
+    ↓
+MySQL
+```
+
+---
+
+## Dépendances
+
+### Production
+
+| Package | Rôle |
+|---|---|
+| `express` | Framework web |
+| `socket.io` | Communication temps réel (WebSocket) |
+| `mysql2` | Driver MySQL |
+| `bcrypt` | Hachage des mots de passe |
+| `cors` | Gestion des origines autorisées |
+| `helmet` | Sécurisation des en-têtes HTTP |
+| `dotenv` | Chargement des variables d'environnement |
+| `morgan` | Logging des requêtes HTTP |
+
+### Développement
+
+| Package | Rôle |
+|---|---|
+| `nodemon` | Redémarrage automatique du serveur |
+| `eslint` | Analyse statique du code |
+
+---
+
+## Pipeline CI
+
+Le fichier `.github/workflows/ci.yml` s'exécute automatiquement à chaque `push` et `pull request` sur toutes les branches.
+
+**Étapes :**
+1. Checkout du code
+2. Installation de Node.js 20
+3. Installation des dépendances (`npm ci`)
+4. Création du fichier `.env` pour l'environnement de test
+5. Lint du code (`npm run lint`)
+6. Exécution des tests (`npm test`)
+
+---
+
+## Ce qui reste à faire
+
+- [ ] Installer et configurer MySQL localement
+- [ ] Compléter `src/handlers/` — auth, post, comment, like, category
+- [ ] Compléter `src/services/` — logique métier
+- [ ] Compléter `src/repository/` — requêtes SQL
+- [ ] Compléter `src/models/` — modèles de données
+- [ ] Compléter `src/middleware/auth.js` — vérification de session
+- [ ] Compléter `src/middleware/rateLimit.js` — limitation des requêtes
+- [ ] Compléter `src/router/index.js` — ajouter les routes au fur et à mesure
+- [ ] Compléter `src/utils/` — cookie, hash, validate
+- [ ] Écrire les tests dans `tests/`
+- [ ] Compléter le `README.md`

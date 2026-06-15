@@ -1,0 +1,45 @@
+{
+  "name": "js-forum",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/evann-g/js-forum#readme",
+  "bugs": {
+    "url": "https://github.com/evann-g/js-forum/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evann-g/js-forum.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "npx kill-port 8000 && nodemon src/server.js",
+    "start": "node src/server.js",
+    "test": "echo \"No test yet\" & exit 0",
+    "lint": "eslint src/"
+  },
+  "devDependencies": {
+    "eslint": "^10.4.0",
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "engine.io": "^6.6.8",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.2.0",
+    "morgan": "^1.10.1",
+    "multer": "^1.4.5-lts.1",
+    "path": "^0.12.7",
+    "socket.io": "^4.8.3",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1"
+  }
+}

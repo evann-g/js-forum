@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Créer un post — Mon Forum</title>
+    <link rel="stylesheet" href="/css/forum.css" />
+</head>
+<body>
+
+<div class="navbar">
+    <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">&#9776;</button>
+    <span class="navbar-brand" style="cursor:pointer" onclick="window.location.href='/'">Mon forum</span>
+    <div class="navbar-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+        <button class="btn btn-outline" onclick="window.location.href='/'">← Retour au forum</button>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Navigation</div>
+    <div class="sidenav">
+        <a href="/">🏠 Accueil</a>
+        <a href="/post" class="active">✏️ Nouveau post</a>
+    </div>
+</div>
+
+<div class="feed">
+    <div class="content-header">Créer un post</div>
+    <div id="auth-check" style="color:var(--text-sec)">Vérification…</div>
+
+    <form id="postForm" style="display:none">
+        <div style="margin-bottom:.9rem;display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:500;color:var(--text-sec)">Catégorie</label>
+            <select id="topicSelect" style="font-family:var(--font);font-size:14px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none" required></select>
+        </div>
+        <div style="margin-bottom:.9rem;display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:500;color:var(--text-sec)">Titre *</label>
+            <input type="text" id="titleInput" placeholder="Titre du post" required minlength="3"
+                style="font-family:var(--font);font-size:14px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none"/>
+        </div>
+        <div style="margin-bottom:.9rem;display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:500;color:var(--text-sec)">Contenu *</label>
+            <textarea id="bodyInput" placeholder="Votre message…" required minlength="10"
+                style="font-family:var(--font);font-size:14px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none;resize:vertical;min-height:140px"></textarea>
+        </div>
+        <div style="margin-bottom:.9rem;display:flex;flex-direction:column;gap:6px">
+            <label style="font-size:13px;font-weight:500;color:var(--text-sec)">Image (optionnel, max 20 Mo)</label>
+            <input type="file" id="imageInput" accept="image/*" style="padding:6px 0"/>
+        </div>
+        <p id="formMessage" style="font-size:13px;margin-bottom:.5rem"></p>
+        <button type="submit" class="btn btn-primary">Publier</button>
+    </form>
+</div>
+
+<script>
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme() {
+    const dark = localStorage.getItem('theme') === 'dark';
+    document.body.classList.toggle('dark', dark);
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+}
+themeBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    themeBtn.textContent = isDark ? '☀️' : '🌙';
+});
+applyTheme();
+document.getElementById('toggleBtn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+async function loadTopics() {
+    const select = document.getElementById('topicSelect');
+    try {
+        const res = await fetch('/api/categories');
+        const topics = await res.json();
+        select.innerHTML = topics.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
+    } catch (err) {
+        select.innerHTML = '<option value="">Erreur chargement catégories</option>';
+    }
+}
+
+async function checkAuth() {
+    const check = document.getElementById('auth-check');
+    try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (!data.user) {
+            check.innerHTML = 'Vous devez être <a href="/login">connecté</a> pour créer un post.';
+            return;
+        }
+        check.style.display = 'none';
+        document.getElementById('postForm').style.display = 'block';
+        loadTopics();
+    } catch (err) {
+        check.textContent = 'Erreur de vérification. Veuillez vous connecter.';
+    }
+}
+
+document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('formMessage');
+    const imageFile = document.getElementById('imageInput').files[0];
+
+    const fd = new FormData();
+    fd.append('title', document.getElementById('titleInput').value);
+    fd.append('body', document.getElementById('bodyInput').value);
+    fd.append('category_ids', document.getElementById('topicSelect').value);
+    if (imageFile) fd.append('image', imageFile);
+
+    try {
+        const res = await fetch('/api/posts', { method: 'POST', body: fd, credentials: 'same-origin' });
+        const data = await res.json();
+        if (!res.ok) {
+            const errMsg = data.errors ? data.errors.join(', ')
+                : (data.error && data.error.message) ? data.error.message
+                : (typeof data.error === 'string') ? data.error
+                : 'Erreur inconnue';
+            msg.textContent = errMsg;
+            msg.style.color = '#ef4444';
+            return;
+        }
+        msg.textContent = 'Post publié ! Redirection…';
+        msg.style.color = '#22c55e';
+        setTimeout(() => window.location.href = '/?post=' + data.id, 800);
+    } catch (err) {
+        msg.textContent = 'Erreur réseau.';
+        msg.style.color = '#ef4444';
+    }
+});
+
+checkAuth();
+</script>
+
+</body>
+</html>

@@ -29,6 +29,32 @@ Table posts {
   status varchar
   likes integer
   dislikes integer
+  image_url varchar
+  created_at timestamp
+}
+
+Table comments {
+  id integer [primary key]
+  post_id integer [not null]
+  user_id integer [not null]
+  body text
+  likes integer
+  dislikes integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table post_votes {
+  user_id integer [not null]
+  post_id integer [not null]
+  vote integer
+  created_at timestamp
+}
+
+Table comment_votes {
+  user_id integer [not null]
+  comment_id integer [not null]
+  vote integer
   created_at timestamp
 }
 

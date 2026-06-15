@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg:        #F8FAFC;
+    --surface:   #FFFFFF;
+    --header:    #FFFFFF;
+    --text:      #0F172A;
+    --text-sec:  #64748B;
+    --border:    #E2E8F0;
+    --link:      #0891B2;
+    --selected:  #F0F9FF;
+    --cyan:      #06B6D4;
+    --cyan-h:    #0891B2;
+    --purple:    #7C3AED;
+    --purple-h:  #6D28D9;
+    --font: 'IBM Plex Sans', system-ui, sans-serif;
+    --radius: 12px;
+    --transition: 0.2s ease;
+}
+
+body.dark {
+    --bg:        #0F172A;
+    --surface:   #111827;
+    --header:    #111827;
+    --text:      #F8FAFC;
+    --text-sec:  #94A3B8;
+    --border:    #334155;
+    --link:      #22D3EE;
+    --selected:  #082F49;
+}
+
+body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background var(--transition), color var(--transition);
+}
+
+/* ── Header ── */
+.nomsite {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--header);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 100;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.nomsite h1 {
+    font-size: 18px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #06B6D4, #7C3AED);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.01em;
+}
+
+/* ── Card ── */
+.page-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 16px 32px;
+}
+
+form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    transition: background var(--transition), border-color var(--transition);
+}
+
+form h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+}
+
+/* ── Fields ── */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sec);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: var(--font);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+}
+
+input::placeholder { color: var(--text-sec); opacity: 0.6; }
+
+/* ── Error ── */
+#error-msg {
+    font-size: 13px;
+    color: #EF4444;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: none;
+}
+
+body.dark #error-msg {
+    background: rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.3);
+}
+
+/* ── Button ── */
+button[type="submit"] {
+    width: 100%;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font);
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background var(--transition), transform var(--transition);
+    margin-top: 4px;
+}
+
+button[type="submit"]:hover  { background: var(--purple-h); }
+button[type="submit"]:active { transform: scale(0.98); }
+
+/* ── Link ── */
+a {
+    font-size: 13px;
+    color: var(--link);
+    text-decoration: none;
+    text-align: center;
+    transition: color var(--transition);
+}
+a:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+    form { padding: 28px 20px; }
+}
